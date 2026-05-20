@@ -1,0 +1,105 @@
+<view class="page">
+  <view class="header-card">
+    <view class="hero-kicker">POEM PANCAKE CONTROL</view>
+    <view class="hero-top">
+      <view class="page-title">诗词摊煎饼管理</view>
+      <view class="header-status {{syncing ? 'is-loading' : 'is-ready'}}">{{syncing ? '同步中' : '已同步'}}</view>
+    </view>
+    <view class="page-desc">这里可以新建主题、设置活动时间、发布或关闭活动，并查看当前画板已经摊到了多大范围。</view>
+    <view class="hero-meta-row">
+      <view class="hero-meta-pill">活动数 {{stats.totalActivities}}</view>
+      <view class="hero-meta-pill">进行中 {{stats.ongoingActivities}}</view>
+      <view class="hero-meta-pill">总字数 {{stats.totalChars}}</view>
+    </view>
+    <view class="header-action-row">
+      <view class="mini-button button-light" bindtap="goPosterManage">管理分享海报模板</view>
+    </view>
+  </view>
+
+  <view class="section-card form-card">
+    <view class="section-title">{{form.activityId ? '编辑活动' : '新建活动'}}</view>
+    <view class="field-list">
+      <view class="field-item">
+        <view class="field-label">活动标题</view>
+        <input class="field-input" data-field="title" value="{{form.title}}" placeholder="比如：四月春夜摊煎饼" bindinput="onFormInput" />
+      </view>
+      <view class="field-item">
+        <view class="field-label">活动主题</view>
+        <input class="field-input" data-field="theme" value="{{form.theme}}" placeholder="比如：春夜 / 校园 / 风" bindinput="onFormInput" />
+      </view>
+      <view class="field-item">
+        <view class="field-label">活动说明</view>
+        <textarea class="field-textarea" data-field="description" value="{{form.description}}" placeholder="告诉大家这场摊煎饼想怎么一起玩" bindinput="onFormInput" />
+      </view>
+      <view class="field-item">
+        <view class="field-label">开始时间</view>
+        <input class="field-input" data-field="startAt" value="{{form.startAt}}" placeholder="格式：2026-04-08 19:30，可留空默认立即开始" bindinput="onFormInput" />
+        <view class="picker-row">
+          <picker class="picker-chip" mode="date" value="{{startDateValue}}" bindchange="onStartDateChange">
+            <view class="picker-chip-inner">{{startDateValue || '选择日期'}}</view>
+          </picker>
+          <picker class="picker-chip" mode="time" value="{{startTimeValue}}" bindchange="onStartTimeChange">
+            <view class="picker-chip-inner">{{startTimeValue || '选择时间'}}</view>
+          </picker>
+          <view class="quick-chip" bindtap="onStartNowTap">现在</view>
+        </view>
+      </view>
+      <view class="field-item">
+        <view class="field-label">截止时间</view>
+        <input class="field-input" data-field="deadlineAt" value="{{form.deadlineAt}}" placeholder="格式：2026-04-12 22:00" bindinput="onFormInput" />
+        <view class="picker-row">
+          <picker class="picker-chip" mode="date" value="{{deadlineDateValue}}" bindchange="onDeadlineDateChange">
+            <view class="picker-chip-inner">{{deadlineDateValue || '选择日期'}}</view>
+          </picker>
+          <picker class="picker-chip" mode="time" value="{{deadlineTimeValue}}" bindchange="onDeadlineTimeChange">
+            <view class="picker-chip-inner">{{deadlineTimeValue || '选择时间'}}</view>
+          </picker>
+          <view class="quick-chip" bindtap="onDeadlineSoonTap">7天后</view>
+        </view>
+      </view>
+    </view>
+    <view class="form-tip">当前先按文本时间输入实现，格式建议统一用 `YYYY-MM-DD HH:mm`。</view>
+    <view class="action-row">
+      <view class="action-button button-light" bindtap="onNewDraftTap">清空表单</view>
+      <view class="action-button button-light" bindtap="onSaveDraftTap">保存草稿</view>
+      <view class="action-button button-strong" bindtap="onSavePublishedTap">保存并发布</view>
+    </view>
+  </view>
+
+  <view class="section-card error-card" wx:if="{{errorMessage && !list.length}}">
+    <view class="page-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+  </view>
+
+  <view class="section-card" wx:for="{{list}}" wx:key="activityId">
+    <view class="entry-card-row">
+      <view class="entry-card-main">
+        <view class="section-title">{{item.title}}</view>
+        <view class="entry-card-desc">主题：{{item.theme || '自由共创'}}</view>
+        <view class="entry-card-desc">{{item.activityTimeText}}</view>
+        <view class="entry-card-desc">状态：{{item.statusText}} · 已写 {{item.filledCount}} 字 · 参与 {{item.userCount}} 人 · 范围 {{item.snapshotSizeText}}</view>
+      </view>
+      <view class="entry-card-arrow">></view>
+    </view>
+    <view class="button-row">
+      <view class="mini-button" data-id="{{item.activityId}}" bindtap="goDetail">查看</view>
+      <view class="mini-button" data-id="{{item.activityId}}" bindtap="onEditTap">编辑</view>
+      <view class="mini-button button-blue" wx:if="{{item.status === 'draft'}}" data-id="{{item.activityId}}" bindtap="onPublishTap">发布</view>
+      <view class="mini-button button-warn" wx:if="{{item.status === 'published'}}" data-id="{{item.activityId}}" bindtap="onCloseTap">关闭</view>
+      <view class="mini-button button-light" wx:if="{{item.status !== 'archived'}}" data-id="{{item.activityId}}" bindtap="onArchiveTap">归档</view>
+      <view class="mini-button button-danger" wx:if="{{item.status === 'draft' && item.filledCount === 0}}" data-id="{{item.activityId}}" bindtap="onDeleteTap">删除</view>
+    </view>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

@@ -1,0 +1,131 @@
+<view class="page">
+  <view class="section-card">
+    <view class="section-title">活动列表</view>
+    <view class="page-desc">可查看当前和往期活动，已结束活动仍可查看详情，但不能继续报名。</view>
+  </view>
+
+  <view class="filter-bar-card">
+    <view
+      class="filter-pill {{statusFilter === item.value ? 'filter-pill-active' : ''}}"
+      wx:for="{{statusFilterOptions}}"
+      wx:key="value"
+      data-value="{{item.value}}"
+      bindtap="onStatusFilterChange"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="empty-text">活动加载中...</view>
+  </view>
+
+  <block wx:elif="{{filteredActivityList.length}}">
+    <view class="activity-card" wx:for="{{filteredActivityList}}" wx:key="_id">
+      <view class="activity-card-topline"></view>
+
+      <block wx:if="{{item.templateType === 'template1'}}">
+        <view class="activity-card-row">
+          <view class="activity-main">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-info">时间：{{item.timeText}}</view>
+            <view class="activity-info">地点：{{item.location || '待定'}}</view>
+            <view class="activity-info">主题：{{item.theme || '暂无主题'}}</view>
+            <view class="activity-info">已报名：{{item.registrationCount || 0}} 人</view>
+          </view>
+
+          <view class="activity-thumb-frame" wx:if="{{item.hasCover && !coverErrorMap[item._id]}}">
+            <image class="activity-thumb-image" src="{{item.coverUrl}}" mode="aspectFill" style="{{item.template1Data.imageStyle}}" data-id="{{item._id}}" binderror="onCoverError"></image>
+          </view>
+          <view class="activity-thumb placeholder" wx:else>封面</view>
+        </view>
+      </block>
+
+      <block wx:elif="{{item.templateType === 'template2'}}">
+        <view class="activity-template2-card">
+          <view class="activity-template2-stage" style="{{item.template2Data.stageStyle}}">
+            <view
+              class="template2-shape template2-shape-{{shape.shapeClass}}"
+              wx:for="{{item.template2Data.shapes}}"
+              wx:for-item="shape"
+              wx:key="shapeKey"
+              style="{{shape.style}}"
+            >
+              {{shape.shapeText}}
+            </view>
+
+            <image
+              class="template2-image"
+              wx:if="{{item.template2Data.hasImage}}"
+              src="{{item.template2Data.imageUrl}}"
+              mode="aspectFill"
+              style="{{item.template2Data.imageStyle}}"
+            ></image>
+
+            <block wx:for="{{item.template2Data.textFields}}" wx:for-item="textField" wx:key="fieldKey">
+              <view
+                class="template2-text-field"
+                wx:if="{{textField.visible}}"
+                style="{{textField.style}}"
+              >
+                {{textField.text}}
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+
+      <block wx:elif="{{item.templateType === 'template3'}}">
+        <view class="activity-template3-card">
+          <image
+            class="activity-template3-image"
+            wx:if="{{item.template3Data.hasImage}}"
+            src="{{item.template3Data.imageUrl}}"
+            mode="aspectFill"
+          ></image>
+          <view class="activity-template3-placeholder" wx:else>请先上传首页海报图</view>
+        </view>
+
+        <view class="activity-template3-main">
+          <view class="activity-title">{{item.title}}</view>
+          <view class="activity-info">时间：{{item.timeText}}</view>
+          <view class="activity-info">地点：{{item.location || '待定'}}</view>
+          <view class="activity-info">主题：{{item.theme || '暂无主题'}}</view>
+          <view class="activity-info">已报名：{{item.registrationCount || 0}} 人</view>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="activity-card-row">
+          <view class="activity-main">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-info">时间：{{item.timeText}}</view>
+            <view class="activity-info">地点：{{item.location || '待定'}}</view>
+            <view class="activity-info">主题：{{item.theme || '暂无主题'}}</view>
+            <view class="activity-info">已报名：{{item.registrationCount || 0}} 人</view>
+          </view>
+
+          <view class="activity-thumb-frame" wx:if="{{item.hasCover && !coverErrorMap[item._id]}}">
+            <image class="activity-thumb-image" src="{{item.coverUrl}}" mode="aspectFill" style="{{item.template1Data.imageStyle}}" data-id="{{item._id}}" binderror="onCoverError"></image>
+          </view>
+          <view class="activity-thumb placeholder" wx:else>封面</view>
+        </view>
+      </block>
+
+      <view class="tag-row">
+        <view class="tag light-tag">{{item.activityMode === 'offline' ? '线下' : '线上'}}</view>
+        <view class="tag light-tag" wx:if="{{item.activityType === 'rewardClaim'}}">奖励活动</view>
+        <view class="tag light-tag" wx:if="{{item.isScheduled}}">预约</view>
+        <view class="tag status-tag status-tag-{{item.statusTagClass}}">{{item.statusTagText}}</view>
+      </view>
+
+      <view class="action-row">
+        <view class="action-btn" data-id="{{item._id}}" bindtap="goActivityDetail">查看详情</view>
+      </view>
+    </view>
+  </block>
+
+  <view class="section-card" wx:else>
+    <view class="empty-text">当前筛选下暂无可查看的活动。</view>
+  </view>
+</view>

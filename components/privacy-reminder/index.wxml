@@ -1,0 +1,28 @@
+<view wx:if="{{visible}}" class="privacy-reminder-mask" catchtouchmove="noop">
+  <view class="privacy-reminder-card" catchtap="noop">
+    <view class="privacy-reminder-icon">
+      <view class="privacy-reminder-icon-back"></view>
+      <view class="privacy-reminder-icon-front"></view>
+    </view>
+
+    <view class="privacy-reminder-title">{{title}}</view>
+    <view class="privacy-reminder-intro">{{introText}}</view>
+
+    <view class="privacy-reminder-contract-row">
+      <text>点击“同意并继续”即表示你已阅读并同意</text>
+      <text class="privacy-reminder-contract-link" bindtap="onViewContractTap">《{{contractName}}》</text>
+    </view>
+
+    <view class="privacy-reminder-action-row">
+      <button class="privacy-reminder-btn privacy-reminder-btn-light" bindtap="onDisagreeTap">{{cancelText}}</button>
+      <button
+        id="privacy-agree-button"
+        class="privacy-reminder-btn privacy-reminder-btn-primary"
+        open-type="agreePrivacyAuthorization"
+        bindagreeprivacyauthorization="onAgreeTap"
+      >
+        {{confirmText}}
+      </button>
+    </view>
+  </view>
+</view>

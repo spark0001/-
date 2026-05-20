@@ -1,0 +1,160 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading}}">
+    <view class="page-title">记录详情</view>
+    <view class="page-desc">正在加载内容...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="section-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">返回列表</button>
+  </view>
+
+  <block wx:else>
+    <view class="header-card detail-hero-card">
+      <view class="hero-kicker">RECORD DETAIL</view>
+      <view class="page-title">{{record.heroTitle}}</view>
+      <view class="hero-summary" wx:if="{{record.heroSummary}}">{{record.heroSummary}}</view>
+      <view class="badge-row">
+        <view class="type-tag {{record.type}}">{{record.typeText}}</view>
+        <view class="meta-chip" wx:if="{{record.durationText}}">{{record.durationText}}</view>
+        <view class="meta-chip" wx:if="{{record.pagesOrChapter}}">{{record.pagesOrChapter}}</view>
+      </view>
+      <view class="page-desc">{{record.createdAtText}}</view>
+    </view>
+
+    <view class="section-card detail-card" wx:if="{{record.type === 'reading'}}">
+      <view class="section-header compact">
+        <view class="section-title plain">阅读打卡详情</view>
+        <view class="section-tip" wx:if="{{record.activityTitle}}">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">书名</view>
+        <view class="info-value">{{record.bookTitleText}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">作者</view>
+        <view class="info-value">{{record.author || '未填写'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">阅读时长</view>
+        <view class="info-value">{{record.durationText || '未填写'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">页数 / 章节</view>
+        <view class="info-value">{{record.pagesOrChapter || '未填写'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">关联活动</view>
+        <view class="info-value">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row no-border">
+        <view class="info-label">时间</view>
+        <view class="info-value">{{record.createdAtText}}</view>
+      </view>
+
+      <view class="text-block compact" wx:if="{{record.contentTitleText}}">
+        <view class="text-label">内容标题</view>
+        <view class="text-content">{{record.contentTitleText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.insightText}}">
+        <view class="text-label">一句话感悟</view>
+        <view class="text-content">{{record.insightText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.excerptText}}">
+        <view class="text-label">摘抄内容</view>
+        <view class="text-content">{{record.excerptText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.hasImages}}">
+        <view class="text-label">图片</view>
+        <view class="image-grid">
+          <image class="detail-image" wx:for="{{record.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewImageTap"></image>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="primary-btn" bindtap="onGeneratePosterTap">生成海报</button>
+      </view>
+    </view>
+
+    <view class="section-card detail-card" wx:elif="{{record.type === 'reward'}}">
+      <view class="section-header compact">
+        <view class="section-title plain">奖励晒单详情</view>
+        <view class="section-tip" wx:if="{{record.activityTitle}}">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">关联活动</view>
+        <view class="info-value">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row no-border">
+        <view class="info-label">时间</view>
+        <view class="info-value">{{record.createdAtText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.title}}">
+        <view class="text-label">标题</view>
+        <view class="text-content">{{record.title}}</view>
+      </view>
+
+      <view class="text-block">
+        <view class="text-label">正文内容</view>
+        <view class="text-content">{{record.contentText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.hasImages}}">
+        <view class="text-label">图片</view>
+        <view class="image-grid">
+          <image class="detail-image" wx:for="{{record.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewImageTap"></image>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="primary-btn" bindtap="onGeneratePosterTap">生成海报</button>
+      </view>
+    </view>
+
+    <view class="section-card detail-card" wx:elif="{{record.type === 'life'}}">
+      <view class="section-header compact">
+        <view class="section-title plain">生活分享详情</view>
+        <view class="section-tip" wx:if="{{record.activityTitle}}">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">关联活动</view>
+        <view class="info-value">{{record.activityTitleText}}</view>
+      </view>
+
+      <view class="info-row no-border">
+        <view class="info-label">时间</view>
+        <view class="info-value">{{record.createdAtText}}</view>
+      </view>
+
+      <view class="text-block">
+        <view class="text-label">正文内容</view>
+        <view class="text-content">{{record.contentText}}</view>
+      </view>
+
+      <view class="text-block" wx:if="{{record.hasImages}}">
+        <view class="text-label">图片</view>
+        <view class="image-grid">
+          <image class="detail-image" wx:for="{{record.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewImageTap"></image>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="primary-btn" bindtap="onGeneratePosterTap">生成海报</button>
+      </view>
+    </view>
+  </block>
+</view>

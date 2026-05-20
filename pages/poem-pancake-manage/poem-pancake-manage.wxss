@@ -1,0 +1,253 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(77, 118, 255, 0.14), transparent 32%),
+    radial-gradient(circle at top right, rgba(143, 182, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #f5f8ff 0%, #f6f8fc 30%, #f5f7fb 100%);
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.header-card,
+.section-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(77, 118, 255, 0.92) 0%, rgba(143, 182, 255, 0.58) 100%) top/100% 8rpx no-repeat,
+    rgba(255, 255, 255, 0.96);
+  border-radius: 28rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid rgba(218, 229, 255, 0.9);
+  box-shadow: 0 18rpx 40rpx rgba(44, 74, 155, 0.08);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  margin-bottom: 18rpx;
+  border-radius: 999rpx;
+  background: rgba(77, 118, 255, 0.1);
+  color: #4d76ff;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 1.4rpx;
+}
+
+.hero-top,
+.entry-card-row,
+.action-row,
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1a2542;
+}
+
+.page-desc,
+.entry-card-desc,
+.form-tip {
+  margin-top: 12rpx;
+  font-size: 27rpx;
+  line-height: 1.7;
+  color: #66758d;
+}
+
+.header-status {
+  flex-shrink: 0;
+  margin-top: 8rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.header-status.is-ready {
+  background: rgba(77, 118, 255, 0.12);
+  color: #3f68ea;
+}
+
+.header-status.is-loading {
+  background: rgba(240, 246, 255, 0.96);
+  color: #7b8db3;
+}
+
+.hero-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.header-action-row {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 18rpx;
+  flex-wrap: wrap;
+}
+
+.hero-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1rpx solid rgba(220, 231, 250, 0.95);
+  color: #5d6d88;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #17306a;
+  padding: 10rpx 18rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, #f2f7ff 0%, #e2eeff 100%);
+  border: 1rpx solid #d7e4ff;
+}
+
+.field-list {
+  margin-top: 24rpx;
+}
+
+.field-item {
+  margin-bottom: 28rpx;
+}
+
+.field-label {
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #294271;
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 22rpx;
+  border: 1rpx solid #d8e5ff;
+  background: #f6f9ff;
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #1f2f4a;
+}
+
+.field-input {
+  min-height: 92rpx;
+}
+
+.field-textarea {
+  min-height: 220rpx;
+}
+
+.picker-row {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.picker-chip,
+.quick-chip {
+  min-height: 76rpx;
+  border-radius: 18rpx;
+  background: #edf4ff;
+  border: 1rpx solid #d7e4ff;
+  padding: 0 24rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.picker-chip-inner,
+.quick-chip {
+  font-size: 24rpx;
+  color: #476bb4;
+  font-weight: 700;
+}
+
+.action-row {
+  margin-top: 22rpx;
+}
+
+.action-button,
+.mini-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.action-button {
+  flex: 1;
+  min-height: 92rpx;
+}
+
+.button-light {
+  background: #eef4ff;
+  color: #5d6d88;
+}
+
+.button-strong,
+.button-blue {
+  background: linear-gradient(145deg, #4d86ff 0%, #315fe3 100%);
+  color: #ffffff;
+}
+
+.entry-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-card-arrow {
+  flex-shrink: 0;
+  font-size: 30rpx;
+  color: #98aef6;
+}
+
+.button-row {
+  margin-top: 20rpx;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.mini-button {
+  min-height: 72rpx;
+  padding: 0 22rpx;
+  background: #f0f4ff;
+  color: #4d5b7a;
+}
+
+.button-warn {
+  background: rgba(254, 243, 199, 0.92);
+  color: #b45309;
+}
+
+.button-danger {
+  background: rgba(254, 226, 226, 0.92);
+  color: #b42318;
+}
+
+.error-card .page-title {
+  color: #b42318;
+}

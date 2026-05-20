@@ -1,0 +1,115 @@
+<view class="page">
+  <view class="header-card">
+    <view class="page-title">权限管理</view>
+    <view class="page-desc">只有 superAdmin 可以修改成员和管理员的角色与权限。成员申请审核权限现在支持独立开关，拥有任一权限的用户会自动收口为管理员。</view>
+  </view>
+
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="empty-text">正在加载用户权限列表...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="empty-text">{{errorMessage}}</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{!userList.length}}">
+    <view class="empty-text">当前没有可管理的用户。</view>
+  </view>
+
+  <block wx:else>
+    <view class="section-card filter-card">
+      <view class="filter-summary-row">
+        <view class="filter-summary">正式成员 {{filterStats.member}} 人</view>
+        <view class="filter-summary">管理员 {{filterStats.admin}} 人</view>
+        <view class="filter-summary">共 {{filterStats.all}} 人</view>
+      </view>
+
+      <view class="search-box">
+        <view class="search-prefix">搜索</view>
+        <input
+          class="search-input"
+          type="text"
+          confirm-type="search"
+          placeholder="搜索昵称、报名名或 OpenID"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+        />
+        <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="onSearchClear">清空</view>
+      </view>
+
+      <view class="filter-row">
+        <view
+          class="filter-chip {{activeFilter === item.value ? 'active' : ''}}"
+          wx:for="{{filterOptions}}"
+          wx:key="value"
+          data-filter="{{item.value}}"
+          bindtap="onFilterChange"
+        >
+          <text>{{item.label}}</text>
+          <text class="filter-chip-count">{{item.count}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{!displayList.length}}">
+      <view class="empty-text">{{emptyStateText}}</view>
+    </view>
+
+    <block wx:else>
+      <view class="section-card" wx:for="{{displayList}}" wx:key="openid">
+        <view class="section-title">{{item.displayName}}</view>
+        <view class="meta-text">OpenID：{{item.openidText}}</view>
+        <view class="meta-text">当前状态：{{item.status || '未设置'}}</view>
+        <view class="meta-text">加入记录：{{item.createdAtText}}</view>
+
+        <view class="field-row">
+          <view class="field-label">角色</view>
+          <picker mode="selector" range="{{roleOptions}}" value="{{item.roleIndex}}" data-index="{{item.sourceIndex}}" bindchange="onRoleChange">
+            <view class="picker-field">{{roleOptions[item.roleIndex]}}</view>
+          </picker>
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">超级管理员</view>
+          <switch checked="{{item.superAdmin}}" data-index="{{item.sourceIndex}}" data-field="superAdmin" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">成员申请审核权限</view>
+          <switch checked="{{item.applicationReviewPermission}}" data-index="{{item.sourceIndex}}" data-field="applicationReviewPermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">数据权限</view>
+          <switch checked="{{item.dataPermission}}" data-index="{{item.sourceIndex}}" data-field="dataPermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">活动管理权限</view>
+          <switch checked="{{item.activityPermission}}" data-index="{{item.sourceIndex}}" data-field="activityPermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">活动奖励权限</view>
+          <switch checked="{{item.rewardPermission}}" data-index="{{item.sourceIndex}}" data-field="rewardPermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">推荐书权限</view>
+          <switch checked="{{item.bookRecommendationPermission}}" data-index="{{item.sourceIndex}}" data-field="bookRecommendationPermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-label">分享海报管理权限</view>
+          <switch checked="{{item.posterManagePermission}}" data-index="{{item.sourceIndex}}" data-field="posterManagePermission" bindchange="onSwitchChange" color="#222222" />
+        </view>
+
+        <view class="meta-text">当前权限列表只显示成员和管理员；拥有任一权限后，保存时会自动收口为管理员。</view>
+
+        <button class="save-btn" data-index="{{item.sourceIndex}}" bindtap="onSaveTap" disabled="{{savingOpenid === item.openid}}">
+          {{savingOpenid === item.openid ? '保存中...' : '保存权限'}}
+        </button>
+      </view>
+    </block>
+  </block>
+</view>

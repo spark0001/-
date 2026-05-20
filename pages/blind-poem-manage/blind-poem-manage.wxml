@@ -1,0 +1,156 @@
+<view class="page">
+  <view class="section-card error-card" wx:if="{{errorMessage && !hasContent}}">
+    <view class="page-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+    <button class="action-btn" bindtap="loadManageData">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="section-card">
+      <view class="hero-kicker">BLIND POEM STUDIO</view>
+      <view class="hero-top">
+        <view class="page-title">双盲作诗管理</view>
+        <view class="header-status {{loading ? 'is-loading' : 'is-ready'}}">{{loading ? '同步中' : '已同步'}}</view>
+      </view>
+      <view class="page-desc">按模式 A / B / C 管理双盲作诗题库，并控制前台入口启停。</view>
+      <view class="hero-meta-row">
+        <view class="hero-meta-pill">题面 {{promptList.length}} 条</view>
+        <view class="hero-meta-pill">作品 {{answerList.length}} 条</view>
+        <view class="hero-meta-pill">管理员可见</view>
+      </view>
+      <view class="sync-tip" wx:if="{{loading}}">后台数据正在静默刷新，你可以先继续查看和编辑当前内容。</view>
+      <view class="sync-tip error" wx:elif="{{errorMessage}}">{{errorMessage}}</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">模式启停</view>
+
+      <view class="switch-row">
+        <view class="switch-copy">
+          <view class="switch-label">模式A</view>
+          <view class="switch-desc">适合简洁题面，前台入口随开关即时生效。</view>
+        </view>
+        <switch checked="{{modeStatus.A}}" data-mode="A" bindchange="onModeSwitchChange" disabled="{{switchingMode === 'A'}}" color="#4d76ff" />
+      </view>
+
+      <view class="switch-row">
+        <view class="switch-copy">
+          <view class="switch-label">模式B</view>
+          <view class="switch-desc">适合偏结构化的双盲创作玩法。</view>
+        </view>
+        <switch checked="{{modeStatus.B}}" data-mode="B" bindchange="onModeSwitchChange" disabled="{{switchingMode === 'B'}}" color="#4d76ff" />
+      </view>
+
+      <view class="switch-row">
+        <view class="switch-copy">
+          <view class="switch-label">模式C</view>
+          <view class="switch-desc">建议搭配主题与意象使用，适合限定命题。</view>
+        </view>
+        <switch checked="{{modeStatus.C}}" data-mode="C" bindchange="onModeSwitchChange" disabled="{{switchingMode === 'C'}}" color="#4d76ff" />
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">{{form.promptId ? '编辑题面' : '新增题面'}}</view>
+      <view class="section-subtitle">调整题面提示、主题与排序，前台会按这里的配置展示给参与者。</view>
+
+      <view class="form-item">
+        <view class="label">所属模式</view>
+        <picker mode="selector" range="{{modeOptions}}" value="{{form.modeIndex}}" bindchange="onModePickerChange">
+          <view class="input">{{modeOptions[form.modeIndex]}}</view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <view class="label">题面标题</view>
+        <input class="input" value="{{form.title}}" data-field="title" bindinput="onFormInput" placeholder="可选，便于后台区分" placeholder-class="field-placeholder" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">题面说明</view>
+        <textarea class="textarea" value="{{form.promptText}}" data-field="promptText" bindinput="onFormInput" placeholder="请输入给用户看到的创作提示" placeholder-class="field-placeholder"></textarea>
+      </view>
+
+      <view class="form-item">
+        <view class="label">主题</view>
+        <input class="input" value="{{form.theme}}" data-field="theme" bindinput="onFormInput" placeholder="模式C建议填写主题" placeholder-class="field-placeholder" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">意象</view>
+        <input class="input" value="{{form.imageryText}}" data-field="imageryText" bindinput="onFormInput" placeholder="多个意象可用逗号分隔" placeholder-class="field-placeholder" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">排序</view>
+        <input class="input" type="number" value="{{form.sort}}" data-field="sort" bindinput="onFormInput" placeholder="数字越小越靠前" placeholder-class="field-placeholder" />
+      </view>
+
+      <view class="switch-row">
+        <view class="switch-copy">
+          <view class="switch-label">启用题面</view>
+          <view class="switch-desc">关闭后题面仍保留在后台，但不再参与前台抽取。</view>
+        </view>
+        <switch checked="{{form.statusEnabled}}" bindchange="onFormStatusChange" color="#4d76ff" />
+      </view>
+
+      <view class="action-row">
+        <button class="action-btn" bindtap="onSavePromptTap" loading="{{saving}}" disabled="{{saving}}">{{form.promptId ? '保存修改' : '新增题面'}}</button>
+        <button class="action-btn light" wx:if="{{form.promptId}}" bindtap="onCancelEditTap">取消编辑</button>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">题库概览</view>
+        <view class="section-tag">{{promptList.length}} 条</view>
+      </view>
+      <view class="section-link" bindtap="goPromptList" wx:if="{{promptList.length}}">查看更多</view>
+
+      <block wx:if="{{promptPreviewList.length}}">
+        <view class="overview-list">
+          <view class="overview-item" wx:for="{{promptPreviewList}}" wx:key="promptId">
+            <view class="overview-main">
+              <view class="overview-top">
+                <view class="overview-title">{{item.title || '未命名题面'}}</view>
+                <view class="prompt-status {{item.status}}">{{item.statusText}}</view>
+              </view>
+              <view class="overview-desc">{{item.modeText}} · {{item.promptText}}</view>
+              <view class="overview-meta">排序 {{item.sort}}</view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="page-desc" wx:else>当前还没有题面，请先新增。</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">作品记录概览</view>
+        <view class="section-tag">{{answerList.length}} 条</view>
+      </view>
+      <view class="section-link" bindtap="goAnswerList" wx:if="{{answerList.length}}">查看更多</view>
+
+      <block wx:if="{{answerPreviewList.length}}">
+        <view class="overview-list">
+          <view class="overview-item" wx:for="{{answerPreviewList}}" wx:key="answerId">
+            <view class="overview-main">
+              <view class="overview-top">
+                <view class="overview-title">{{item.promptSummary}}</view>
+                <view class="answer-tag-row">
+                  <view class="prompt-status {{item.reviewStatus}}">{{item.reviewStatusText}}</view>
+                  <view class="prompt-status featured" wx:if="{{item.isFeatured}}">精选</view>
+                </view>
+              </view>
+              <view class="overview-desc">{{item.modeText}} · {{item.content}}</view>
+              <view class="overview-meta">{{item.authorText}} · {{item.createdAtText}}</view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="page-desc" wx:else>当前还没有用户作品记录。</view>
+    </view>
+  </block>
+</view>

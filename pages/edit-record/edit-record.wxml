@@ -1,0 +1,165 @@
+<view class="page">
+  <view class="hero-card" wx:if="{{recordLoaded}}">
+    <view class="hero-kicker">{{recordType === 'reading' ? 'READING EDIT' : 'LIFE EDIT'}}</view>
+    <view class="page-title">{{recordType === 'reading' ? '编辑阅读打卡' : '编辑生活分享'}}</view>
+    <view class="page-desc">保存后只更新内容，不改最初上传时间。列表里的时间和阅读打卡日期都会继续保留初次记录时的结果。</view>
+    <view class="meta-row">
+      <view class="meta-chip">初次上传：{{originalCreatedAtText}}</view>
+      <view class="meta-chip" wx:if="{{recordType === 'reading' && originalDayKeyText}}">打卡日期：{{originalDayKeyText}}</view>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{loading && !recordLoaded}}">
+    <view class="section-title">正在准备编辑内容</view>
+    <view class="section-desc">正在读取这条记录和可选活动，请稍候。</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="section-title">暂时无法编辑</view>
+    <view class="section-desc">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+
+  <block wx:elif="{{recordLoaded}}">
+    <view class="section-card editor-card" wx:if="{{recordType === 'reading'}}">
+      <view class="editor-card-topline"></view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">基础信息</view>
+
+        <view class="form-item">
+          <view class="label">书名</view>
+          <input class="input" placeholder="请输入书名" placeholder-class="field-placeholder" value="{{readingForm.bookTitle}}" data-field="bookTitle" bindinput="onReadingInput" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">作者（选填）</view>
+          <input class="input" placeholder="请输入作者" placeholder-class="field-placeholder" value="{{readingForm.author}}" data-field="author" bindinput="onReadingInput" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">阅读时长（分钟）</view>
+          <input class="input" type="number" placeholder="例如：45" placeholder-class="field-placeholder" value="{{readingForm.duration}}" data-field="duration" bindinput="onReadingInput" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">阅读页数 / 章节（选填）</view>
+          <input class="input" placeholder="例如：第20-35页 / 第3章" placeholder-class="field-placeholder" value="{{readingForm.pagesOrChapter}}" data-field="pagesOrChapter" bindinput="onReadingInput" />
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">图片与活动</view>
+
+        <view class="form-item">
+          <view class="label">阅读图片（选填）</view>
+          <view class="image-action-row">
+            <button class="image-action-btn" bindtap="onChooseImages" data-scope="reading" disabled="{{saving}}">选择图片</button>
+          </view>
+
+          <view class="image-grid" wx:if="{{readingForm.images.length}}">
+            <view class="image-item" wx:for="{{readingForm.images}}" wx:key="*this">
+              <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" data-scope="reading" bindtap="onPreviewImage"></image>
+              <view class="image-remove" data-index="{{index}}" data-scope="reading" bindtap="onRemoveImage">×</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">关联活动（选填）</view>
+          <picker mode="selector" range="{{activityTitleOptions}}" value="{{readingForm.activityIndex}}" bindchange="onActivityChange">
+            <view class="picker-field {{readingForm.activityTitle ? '' : 'picker-placeholder'}}">{{readingForm.activityTitle || '未关联活动'}}</view>
+          </picker>
+          <view class="picker-hint" wx:if="{{activitiesLoading}}">活动列表加载中...</view>
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">内容填写</view>
+
+        <view class="form-item">
+          <view class="label">内容标题（选填）</view>
+          <input class="input" placeholder="给这次阅读内容起一个小标题" placeholder-class="field-placeholder" value="{{readingForm.contentTitle}}" data-field="contentTitle" bindinput="onReadingInput" />
+          <view class="picker-hint">{{contentTitleHintText}}</view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">一句话感悟（与摘抄二选一必填）</view>
+          <textarea class="textarea" placeholder="写一句你今天最想保留下来的感受" placeholder-class="field-placeholder" value="{{readingForm.insight}}" data-field="insight" bindinput="onReadingInput" maxlength="100" />
+          <view class="field-count">{{readingInsightCount}} / 100</view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">摘抄内容（与感悟二选一必填）</view>
+          <textarea class="textarea" placeholder="记录一句想保存下来的文字" placeholder-class="field-placeholder" value="{{readingForm.excerpt}}" data-field="excerpt" bindinput="onReadingInput" maxlength="200" />
+          <view class="field-count">{{readingExcerptCount}} / 200</view>
+        </view>
+      </view>
+
+      <button class="submit-btn primary-submit-btn" bindtap="onSaveTap" disabled="{{saving}}">
+        {{saving ? '保存中...' : '保存修改'}}
+      </button>
+    </view>
+
+    <view class="section-card editor-card" wx:elif="{{recordType === 'life'}}">
+      <view class="editor-card-topline"></view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">内容设置</view>
+
+        <view class="form-item">
+          <view class="label">标题（选填）</view>
+          <input class="input" placeholder="给这条生活分享加一个标题" placeholder-class="field-placeholder" value="{{lifeForm.title}}" data-field="title" bindinput="onLifeInput" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">分享内容</view>
+          <textarea class="textarea textarea-large" placeholder="写下今天想分享的内容" placeholder-class="field-placeholder" value="{{lifeForm.content}}" data-field="content" bindinput="onLifeInput" maxlength="500" />
+          <view class="field-count">{{lifeContentCount}} / 500</view>
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">图片与活动</view>
+
+        <view class="form-item">
+          <view class="label">分享图片（选填）</view>
+          <view class="image-action-row">
+            <button class="image-action-btn" bindtap="onChooseImages" data-scope="life" disabled="{{saving}}">选择图片</button>
+          </view>
+
+          <view class="image-grid" wx:if="{{lifeForm.images.length}}">
+            <view class="image-item" wx:for="{{lifeForm.images}}" wx:key="*this">
+              <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" data-scope="life" bindtap="onPreviewImage"></image>
+              <view class="image-remove" data-index="{{index}}" data-scope="life" bindtap="onRemoveImage">×</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">关联活动（选填）</view>
+          <picker mode="selector" range="{{activityTitleOptions}}" value="{{lifeForm.activityIndex}}" bindchange="onActivityChange">
+            <view class="picker-field {{lifeForm.activityTitle ? '' : 'picker-placeholder'}}">{{lifeForm.activityTitle || '未关联活动'}}</view>
+          </picker>
+          <view class="picker-hint" wx:if="{{activitiesLoading}}">活动列表加载中...</view>
+        </view>
+      </view>
+
+      <button class="submit-btn primary-submit-btn" bindtap="onSaveTap" disabled="{{saving}}">
+        {{saving ? '保存中...' : '保存修改'}}
+      </button>
+    </view>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

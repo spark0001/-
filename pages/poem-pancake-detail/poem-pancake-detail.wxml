@@ -1,0 +1,110 @@
+<view class="page">
+  <view class="hero-card" wx:if="{{loading && !activity}}">
+    <view class="hero-kicker">POEM PANCAKE DETAIL</view>
+    <view class="page-title">正在展开画板</view>
+    <view class="page-desc">马上就能看到这场共创的主题、边界和当前快照。</view>
+  </view>
+
+  <block wx:else>
+    <view class="hero-card" wx:if="{{activity}}">
+      <view class="hero-glow hero-glow-one"></view>
+      <view class="hero-glow hero-glow-two"></view>
+      <view class="hero-kicker">POEM PANCAKE DETAIL</view>
+      <view class="hero-top">
+        <view class="hero-main">
+          <view class="page-title">{{activity.title}}</view>
+          <view class="page-desc">{{activity.description || '这是一张会随着每个人输入继续向外生长的诗词画板。'}}</view>
+        </view>
+        <view class="status-pill status-{{activity.status}}">{{activity.statusText}}</view>
+      </view>
+      <view class="meta-row">
+        <view class="meta-pill">主题：{{activity.theme || '自由共创'}}</view>
+        <view class="meta-pill">{{activity.activityTimeText}}</view>
+        <view class="meta-pill">{{activity.remainingTimeText}}</view>
+      </view>
+
+      <view class="stat-grid">
+        <view class="stat-card stat-card-primary">
+          <view class="stat-value">{{myCharCount}}</view>
+          <view class="stat-label">我贡献的字</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-value">{{totalChars}}</view>
+          <view class="stat-label">当前总字数</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-value">{{contributionRateText}}</view>
+          <view class="stat-label">贡献度</view>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <view class="action-tip">{{activity.writeHint}}</view>
+        <view class="action-button" bindtap="goPoster">生成分享海报</view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{errorMessage && !activity}}">
+      <view class="section-title">加载失败</view>
+      <view class="page-desc">{{errorMessage}}</view>
+    </view>
+
+    <view class="section-card" wx:if="{{activity}}">
+      <view class="section-head">
+        <view class="section-title">画板快照</view>
+        <view class="section-link">显示 {{displayBounds.rowCount}} x {{displayBounds.colCount}}</view>
+      </view>
+
+      <scroll-view class="board-scroll" scroll-x="true" scroll-y="true" enhanced="true" show-scrollbar="false">
+        <view class="board" style="width: {{boardWidthRpx}}rpx; height: {{boardHeightRpx}}rpx;">
+          <view class="board-row" wx:for="{{boardRows}}" wx:key="key">
+            <view
+              class="board-cell {{item2.filled ? 'is-filled' : ''}} {{item2.isMine ? 'is-mine' : ''}} {{item2.reserved ? 'is-reserved' : ''}} {{item2.reservedByMe ? 'is-reserved-mine' : ''}} {{item2.isEditing ? 'is-editing' : ''}}"
+              wx:for="{{item.cellList}}"
+              wx:for-item="item2"
+              wx:key="key"
+              data-key="{{item2.key}}"
+              data-row="{{item2.rowIndex}}"
+              data-col="{{item2.colIndex}}"
+              data-content="{{item2.content}}"
+              data-mine="{{item2.isMine}}"
+              data-nickname="{{item2.nickname}}"
+              bindtap="onCellTap"
+            >
+              <input
+                wx:if="{{item2.isEditing}}"
+                class="board-cell-input"
+                maxlength="8"
+                value="{{editorContent}}"
+                focus="{{item2.isEditing}}"
+                placeholder="{{editorPlaceholder}}"
+                placeholder-class="board-cell-placeholder"
+                selection-start="{{editorSelectionStart}}"
+                selection-end="{{editorSelectionEnd}}"
+                confirm-type="done"
+                bindinput="onEditorInput"
+                bindconfirm="onInlineEditorConfirm"
+                bindblur="onInlineEditorBlur"
+                catchtap="noop"
+              />
+              <view wx:elif="{{item2.reserved}}" class="board-cell-reserve-text">{{item2.reservedText}}</view>
+              <view wx:else class="board-cell-content">{{item2.content}}</view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

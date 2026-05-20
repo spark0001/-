@@ -1,0 +1,84 @@
+<view class="page">
+  <view class="hero-card" wx:if="{{loading && !hasContent}}">
+    <view class="hero-kicker">POEM PANCAKE BOARD</view>
+    <view class="page-title">诗词摊煎饼</view>
+    <view class="page-desc">正在准备活动列表、共创统计与最新的诗词快照...</view>
+  </view>
+
+  <block wx:else>
+    <view class="hero-card">
+      <view class="hero-glow hero-glow-one"></view>
+      <view class="hero-glow hero-glow-two"></view>
+      <view class="hero-kicker">POEM PANCAKE BOARD</view>
+      <view class="hero-title-row">
+        <view class="page-title">诗词摊煎饼</view>
+        <view class="hero-floating-tag">自由扩张画板</view>
+      </view>
+      <view class="page-desc">点一格，写一个字。画板会随着共创内容自然向外扩展，截止前每个人都能继续把这张“诗词煎饼”摊大一点。</view>
+
+      <view class="hero-stat-grid">
+        <view class="hero-stat-card hero-stat-card-primary">
+          <view class="hero-stat-value">{{stats.totalActivities}}</view>
+          <view class="hero-stat-label">活动总数</view>
+        </view>
+        <view class="hero-stat-card">
+          <view class="hero-stat-value">{{stats.ongoingActivities}}</view>
+          <view class="hero-stat-label">进行中</view>
+        </view>
+        <view class="hero-stat-card">
+          <view class="hero-stat-value">{{stats.totalChars}}</view>
+          <view class="hero-stat-label">累计字数</view>
+        </view>
+      </view>
+
+      <view class="sync-tip" wx:if="{{syncing}}">活动数据正在静默刷新，你可以先进入当前列表查看。</view>
+    </view>
+
+    <view class="section-card" wx:if="{{errorMessage && !list.length}}">
+      <view class="section-title">加载失败</view>
+      <view class="page-desc">{{errorMessage}}</view>
+    </view>
+
+    <view class="section-card" wx:elif="{{!list.length}}">
+      <view class="section-title">暂时还没有活动</view>
+      <view class="page-desc">管理员创建并发布后，这里会按进行中和已截止的顺序展示活动卡片。</view>
+    </view>
+
+    <block wx:else>
+      <view class="section-card" wx:for="{{list}}" wx:key="activityId" data-id="{{item.activityId}}" bindtap="goDetail">
+        <view class="section-topline"></view>
+        <view class="card-top">
+          <view class="section-title">{{item.title}}</view>
+          <view class="status-pill status-{{item.status}}">{{item.statusText}}</view>
+        </view>
+        <view class="theme-text" wx:if="{{item.theme}}">主题：{{item.theme}}</view>
+        <view class="page-desc">{{item.description || '这是一场会随着字词生长的共创互动，点击卡片即可进入画板。'}}</view>
+        <view class="meta-row">
+          <view class="meta-pill">{{item.activityTimeText}}</view>
+          <view class="meta-pill">{{item.remainingTimeText}}</view>
+        </view>
+        <view class="stats-row">
+          <view class="stats-item">已写 {{item.filledCount}} 字</view>
+          <view class="stats-item">参与 {{item.userCount}} 人</view>
+          <view class="stats-item">快照范围 {{item.snapshotSizeText}}</view>
+        </view>
+        <view class="enter-row">
+          <view class="enter-tip">点进活动，继续在画板上摊开你的字。</view>
+          <view class="enter-link">进入活动 ></view>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

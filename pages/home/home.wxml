@@ -1,0 +1,214 @@
+<view class="page">
+  <view class="hero-card">
+    <view class="hero-glow hero-glow-one"></view>
+    <view class="hero-glow hero-glow-two"></view>
+    <view class="hero-kicker">CAMPUS READING COLLECTIVE</view>
+    <view class="hero-title-row">
+      <view class="hero-title">校园读书会</view>
+      <view class="hero-mark">HOME</view>
+    </view>
+    <view class="hero-desc">
+      围绕阅读、活动和创意互动，记录每一次阅读和分享。
+    </view>
+    <view class="hero-badge-row">
+      <view class="hero-badge">阅读记录</view>
+      <view class="hero-badge">主题活动</view>
+      <view class="hero-badge">创意互动</view>
+    </view>
+  </view>
+
+  <view class="section-card section-card-reading">
+    <view class="section-header">
+      <view class="section-header-main">
+        <view class="section-title major-section-title">阅读激励</view>
+        <view class="section-subtitle">围绕当前激励活动实时统计</view>
+      </view>
+      <view class="section-tag reading-tag" bindtap="goCurrentReadingActivityDetail">{{progress.activityId ? '》》》当前活动' : '待配置'}}</view>
+    </view>
+
+    <view class="progress-box">
+      <view class="progress-box-topline"></view>
+      <view class="progress-content-row">
+        <view class="progress-copy">
+          <view class="progress-rule">{{progress.ruleText}}</view>
+
+          <view class="progress-main">
+            <text class="progress-main-label">本期已完成</text>
+            <text class="progress-main-total">{{progress.completedCount}}/{{progress.targetCount}}</text>
+            <text class="progress-main-label">{{progress.progressSuffixText}}</text>
+          </view>
+
+          <view class="progress-sub {{progress.statusClass}}">{{progress.statusText}}</view>
+        </view>
+
+        <view class="progress-side-action" bindtap="goReadingLog">
+          <view class="progress-side-action-title">去打卡</view>
+          <view class="progress-side-action-sub">记录本期阅读</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card section-card-activity">
+    <view class="section-header">
+      <view class="section-header-main">
+        <view class="section-title major-section-title">近期活动</view>
+        <view class="section-subtitle">最近开放的共读与主题活动</view>
+      </view>
+      <view class="section-link clickable-link" bindtap="goActivityListPage">{{activityLoading ? '加载中...' : '》》》查看更多'}}</view>
+    </view>
+
+    <block wx:if="{{activityList.length}}">
+      <view
+        class="activity-card activity-clickable"
+        wx:for="{{activityList}}"
+        wx:key="_id"
+        data-id="{{item._id}}"
+        bindtap="goActivityDetail"
+      >
+        <view class="activity-card-accent"></view>
+
+        <block wx:if="{{item.templateType === 'template1'}}">
+          <view class="activity-card-row">
+            <view class="activity-main">
+              <view class="activity-title">{{item.title}}</view>
+              <view class="activity-info">时间：{{item.timeText}}</view>
+              <view class="activity-info">地点：{{item.location || '待定'}}</view>
+              <view class="activity-info">主题：{{item.theme}}</view>
+            </view>
+
+            <view class="activity-thumb-frame" wx:if="{{item.hasCover && !coverErrorMap[item._id]}}">
+              <image class="activity-thumb-image" src="{{item.coverUrl}}" mode="aspectFill" style="{{item.template1Data.imageStyle}}" data-id="{{item._id}}" binderror="onActivityCoverError"></image>
+            </view>
+            <view class="activity-thumb placeholder" wx:else>封面</view>
+          </view>
+        </block>
+
+        <block wx:elif="{{item.templateType === 'template2'}}">
+          <view class="activity-template2-card">
+            <view class="activity-template2-stage" style="{{item.template2Data.stageStyle}}">
+              <view
+                class="template2-shape template2-shape-{{shape.shapeClass}}"
+                wx:for="{{item.template2Data.shapes}}"
+                wx:for-item="shape"
+                wx:key="shapeKey"
+                style="{{shape.style}}"
+              >
+                {{shape.shapeText}}
+              </view>
+
+              <image
+                class="template2-image"
+                wx:if="{{item.template2Data.hasImage}}"
+                src="{{item.template2Data.imageUrl}}"
+                mode="aspectFill"
+                style="{{item.template2Data.imageStyle}}"
+              ></image>
+
+              <view class="activity-template-badge">模板2</view>
+              <block wx:for="{{item.template2Data.textFields}}" wx:for-item="textField" wx:key="fieldKey">
+                <view
+                  class="template2-text-field"
+                  wx:if="{{textField.visible}}"
+                  style="{{textField.style}}"
+                >
+                  {{textField.text}}
+                </view>
+              </block>
+            </view>
+          </view>
+        </block>
+
+        <block wx:elif="{{item.templateType === 'template3'}}">
+          <view class="activity-template3-card">
+            <image
+              class="activity-template3-image"
+              wx:if="{{item.template3Data.hasImage}}"
+              src="{{item.template3Data.imageUrl}}"
+              mode="aspectFill"
+            ></image>
+            <view class="activity-template3-placeholder" wx:else>请先上传首页海报图</view>
+          </view>
+        </block>
+
+        <block wx:else>
+          <view class="activity-card-row">
+            <view class="activity-main">
+              <view class="activity-title">{{item.title}}</view>
+              <view class="activity-info">时间：{{item.timeText}}</view>
+              <view class="activity-info">地点：{{item.location || '待定'}}</view>
+              <view class="activity-info">主题：{{item.theme}}</view>
+            </view>
+
+            <view class="activity-thumb-frame" wx:if="{{item.hasCover && !coverErrorMap[item._id]}}">
+              <image class="activity-thumb-image" src="{{item.coverUrl}}" mode="aspectFill" style="{{item.template1Data.imageStyle}}" data-id="{{item._id}}" binderror="onActivityCoverError"></image>
+            </view>
+            <view class="activity-thumb placeholder" wx:else>封面</view>
+          </view>
+        </block>
+
+        <view class="activity-meta-chips">
+          <view class="activity-mini-tag">{{item.activityMode === 'offline' ? '线下活动' : '线上活动'}}</view>
+          <view class="activity-mini-tag" wx:if="{{item.theme}}">{{item.theme}}</view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-text" wx:else>
+      当前还没有可展示的活动，管理员发布后会在这里显示。
+    </view>
+  </view>
+
+  <view class="section-card recommendation-section section-card-book">
+    <view class="section-header">
+      <view class="section-header-main">
+        <view class="section-title major-section-title">图书推荐</view>
+        <view class="section-subtitle">后台精选的阅读灵感</view>
+      </view>
+      <view class="section-link clickable-link" bindtap="goBookRecommendationList">{{recommendationLoading ? '加载中...' : '》》》查看更多'}}</view>
+    </view>
+
+    <view class="recommendation-card" wx:if="{{recommendation.hasRecommendation}}" bindtap="goBookRecommendation">
+      <view class="recommendation-card-topline"></view>
+      <view class="recommendation-main">
+        <view class="recommendation-title">{{recommendation.title}}</view>
+        <view class="recommendation-desc">{{recommendation.summary || '点击查看后台配置的图书推荐内容。'}}</view>
+      </view>
+
+      <image
+        class="recommendation-cover"
+        wx:if="{{recommendation.coverUrl}}"
+        src="{{recommendation.coverUrl}}"
+        mode="aspectFill"
+      ></image>
+      <view class="recommendation-cover placeholder" wx:else>图书推荐</view>
+    </view>
+
+    <view class="empty-text" wx:else>
+      当前还没有配置图书推荐，管理员配置后会在这里显示。
+    </view>
+  </view>
+
+  <view class="notice-dialog-mask" wx:if="{{noticePromptVisible}}" catchtouchmove="noop">
+    <view class="notice-dialog-card" catchtap="noop">
+      <view class="notice-dialog-title">{{noticePromptTitle || '公告'}}</view>
+      <scroll-view class="notice-dialog-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <view class="notice-dialog-content">{{noticePromptContent}}</view>
+      </scroll-view>
+      <button class="notice-dialog-btn" bindtap="onNoticePromptConfirm">我知道了</button>
+    </view>
+  </view>
+
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

@@ -1,0 +1,78 @@
+<view class="page">
+  <view class="header-card">
+    <view class="page-title">外来访客申请列表</view>
+    <view class="page-desc">这里仅展示申请口令不正确、未进入成员审核池的外来访客报名记录。</view>
+  </view>
+
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="empty-text">正在加载外来访客申请...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="empty-text">{{errorMessage}}</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{!list.length}}">
+    <view class="empty-text">当前没有外来访客申请记录。</view>
+  </view>
+
+  <block wx:else>
+    <view class="section-card" wx:for="{{list}}" wx:key="_id">
+      <view class="section-header">
+        <view class="section-title">{{item.name || '未填写姓名'}}</view>
+        <view class="status-badge">{{item.statusText || '待处理'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">年级 / 专业</view>
+        <view class="info-value">{{item.gradeMajor || '未填写'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">联系方式</view>
+        <view class="info-value">{{item.contact || '未填写'}}</view>
+      </view>
+
+      <view class="info-row no-border">
+        <view class="info-label">提交时间</view>
+        <view class="info-value">{{item.createdAtText}}</view>
+      </view>
+
+      <view class="text-block">
+        <view class="text-label">报名说明</view>
+        <view class="text-content">{{item.reason || '未填写'}}</view>
+      </view>
+
+      <view class="action-row">
+        <button
+          class="action-btn delete"
+          data-id="{{item._id}}"
+          data-name="{{item.name}}"
+          data-action="delete"
+          bindtap="onActionTap"
+          disabled="{{!!actioningKey}}"
+        >
+          删除记录
+        </button>
+        <button
+          class="action-btn approve"
+          wx:if="{{item.canApprove}}"
+          data-id="{{item._id}}"
+          data-name="{{item.name}}"
+          data-action="approve"
+          bindtap="onActionTap"
+          disabled="{{!!actioningKey}}"
+        >
+          通过审核
+        </button>
+        <button
+          class="action-btn approved"
+          wx:else
+          disabled="{{true}}"
+        >
+          已通过
+        </button>
+      </view>
+    </view>
+  </block>
+</view>

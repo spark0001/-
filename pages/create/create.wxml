@@ -1,0 +1,55 @@
+<view class="page">
+  <view class="hero-card">
+    <view class="hero-glow hero-glow-one"></view>
+    <view class="hero-glow hero-glow-two"></view>
+    <view class="hero-kicker">CREATIVE INTERACTIONS</view>
+    <view class="page-title">创作互动</view>
+    <view class="page-desc">这里放阅读之外的轻创作互动玩法，当前已开放双盲作诗模式A / 模式B / 模式C，以及会自由扩张的诗词摊煎饼玩法。</view>
+    <view class="hero-badge-row">
+      <view class="hero-badge">模式A</view>
+      <view class="hero-badge">模式B</view>
+      <view class="hero-badge">模式C</view>
+      <view class="hero-badge">摊煎饼</view>
+    </view>
+  </view>
+
+  <view class="entry-card" bindtap="goBlindPoem">
+    <view class="entry-card-topline"></view>
+    <view class="entry-card-row">
+      <view class="entry-main">
+        <view class="entry-title">双盲作诗</view>
+        <view class="entry-desc">进入模式A / 模式B / 模式C的双盲作诗互动</view>
+      </view>
+      <view class="entry-arrow-pill">
+        <view class="entry-arrow-pill-text">进入</view>
+        <view class="entry-arrow">></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="entry-card" bindtap="goPoemPancake">
+    <view class="entry-card-topline"></view>
+    <view class="entry-card-row">
+      <view class="entry-main">
+        <view class="entry-title">诗词摊煎饼</view>
+        <view class="entry-desc">进入会随着共创内容自由扩展的诗词画板，点格写字、实时生成快照海报。</view>
+      </view>
+      <view class="entry-arrow-pill">
+        <view class="entry-arrow-pill-text">进入</view>
+        <view class="entry-arrow">></view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

@@ -1,0 +1,427 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading}}">
+    <view class="page-title">活动详情</view>
+    <view class="page-desc">正在加载活动信息...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="section-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="cover-card activity-cover-card">
+      <image class="cover-image" wx:if="{{activity.coverUrl}}" src="{{activity.coverUrl}}" mode="aspectFill"></image>
+      <view class="cover-placeholder" wx:else>
+        <view class="cover-placeholder-title">{{activity.title || '活动封面'}}</view>
+        <view class="cover-placeholder-desc">尚未上传活动封面图</view>
+      </view>
+    </view>
+
+    <view class="header-card activity-hero-card">
+      <view class="section-topline"></view>
+      <view class="page-title">{{activity.title}}</view>
+
+      <view class="tag-row">
+        <view class="tag theme-tag">{{activity.theme || '未设置主题'}}</view>
+        <view class="tag theme-tag" wx:if="{{activity.isScheduled}}">预约</view>
+        <view class="tag status-tag">{{activity.statusText}}</view>
+      </view>
+
+      <view class="page-desc">{{activity.description}}</view>
+    </view>
+
+    <view class="section-card activity-info-card">
+      <view class="section-topline"></view>
+      <view class="section-title">活动信息</view>
+
+      <view class="info-row">
+        <view class="info-label">时间</view>
+        <view class="info-value">{{activity.timeText || '待定'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">活动形式</view>
+        <view class="info-value">{{activity.activityModeText}}</view>
+      </view>
+
+      <view class="info-row" wx:if="{{activity.publishTimeText}}">
+        <view class="info-label">发布时间</view>
+        <view class="info-value">{{activity.publishTimeText}}</view>
+      </view>
+
+      <view class="info-row" wx:if="{{activity.isRewardClaim}}">
+        <view class="info-label">奖励标签</view>
+        <view class="info-value">{{activity.rewardLabel || '本月奖励'}}</view>
+      </view>
+
+      <view class="info-row">
+        <view class="info-label">地点</view>
+        <view class="info-value">{{activity.location}}</view>
+      </view>
+
+      <view class="info-row {{activity.officialAccountUrl ? '' : 'no-border'}}">
+        <view class="info-label">主题</view>
+        <view class="info-value">{{activity.theme || '未设置主题'}}</view>
+      </view>
+
+      <view class="info-row no-border" wx:if="{{activity.officialAccountUrl}}" bindtap="onOfficialAccountTap">
+        <view class="info-label">相关公众号</view>
+        <view class="info-value info-value-link">点击跳转</view>
+      </view>
+    </view>
+
+    <view class="section-card register-section-card">
+      <view class="section-topline"></view>
+      <view class="section-title">报名状态</view>
+
+      <view class="status-box register-status-box">
+        <view class="status-text">当前状态：{{activity.registrationStatusText}}</view>
+        <view class="status-sub">当前{{activity.registrationCount}}人报名</view>
+      </view>
+
+      <button
+        class="submit-btn {{activity.isRegistered ? 'submit-btn-cancel submit-btn-compact' : 'submit-btn-register'}} {{!activity.canOperate ? 'submit-btn-disabled' : ''}}"
+        bindtap="onRegisterTap"
+        disabled="{{!activity.canOperate || submitting}}"
+      >
+        {{submitting ? '提交中...' : activity.registerButtonText}}
+      </button>
+
+      <view class="register-action-row">
+        <button
+          class="secondary-btn reading-entry-btn register-action-btn"
+          wx:if="{{!activity.isRewardClaim}}"
+          bindtap="goReadingLog"
+        >
+          去打卡
+        </button>
+      </view>
+
+      <view class="empty-text" wx:if="{{activity.registerDisabledReason && !activity.isRegistered}}">
+        {{activity.registerDisabledReason}}
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{attendanceManage.visible}}">
+      <view class="section-header collapsible-header" bindtap="onToggleAttendanceExpand">
+        <view class="section-title">报名人员列表</view>
+        <view class="section-header-right">
+          <view class="section-tag">{{attendanceManage.counts.all}} 人</view>
+          <view class="section-tag">{{attendanceExpanded ? '收起' : '展开'}}</view>
+        </view>
+      </view>
+
+      <block wx:if="{{attendanceExpanded}}">
+        <view class="filter-row">
+          <view class="filter-chip {{attendanceFilter === 'all' ? 'filter-chip-active' : ''}}" bindtap="onAttendanceFilterChange" data-filter="all">
+            全部
+          </view>
+          <view class="filter-chip {{attendanceFilter === 'attended' ? 'filter-chip-active' : ''}}" bindtap="onAttendanceFilterChange" data-filter="attended">
+            已到场
+          </view>
+          <view class="filter-chip {{attendanceFilter === 'absent' ? 'filter-chip-active' : ''}}" bindtap="onAttendanceFilterChange" data-filter="absent">
+            缺席
+          </view>
+        </view>
+
+        <block wx:if="{{attendanceManage.filteredAttendeeList.length}}">
+          <view class="attendee-card" wx:for="{{attendanceManage.filteredAttendeeList}}" wx:key="attendeeKey">
+            <view class="attendee-avatar-box">
+              <image class="attendee-avatar-image" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+              <view class="attendee-avatar-placeholder" wx:else>{{item.avatarText}}</view>
+            </view>
+
+            <view class="attendee-main">
+              <view class="attendee-name-row">
+                <view class="attendee-name">{{item.displayName}}</view>
+                <view class="attendee-status {{item.attended ? 'attendee-status-attended' : 'attendee-status-absent'}}">
+                  {{item.attendanceStatusText}}
+                </view>
+              </view>
+              <view class="attendee-contact">联系方式：{{item.contact || '未填写'}}</view>
+            </view>
+
+            <button
+              class="attendee-action-btn {{item.attended ? 'attendee-action-btn-light' : ''}}"
+              bindtap="onToggleAttendedTap"
+              data-openid="{{item.openid}}"
+              disabled="{{attendanceSubmittingOpenid === item.openid}}"
+            >
+              {{attendanceSubmittingOpenid === item.openid ? '处理中...' : (item.attended ? '缺席' : '到场')}}
+            </button>
+          </view>
+        </block>
+
+        <view class="empty-text" wx:else>当前筛选下没有报名人员。</view>
+      </block>
+    </view>
+
+    <view class="section-card" wx:if="{{activity.isRewardClaim}}">
+      <view class="section-header">
+        <view class="section-title">领取奖励成员头像</view>
+        <view class="section-tag">{{rewardClaimMembers.length}} 人</view>
+      </view>
+
+      <view class="avatar-grid" wx:if="{{rewardClaimMembers.length}}">
+        <view class="avatar-item" wx:for="{{rewardClaimMembers}}" wx:key="memberKey">
+          <image class="avatar-item-image" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+          <view class="avatar-item-placeholder" wx:else>{{item.avatarText}}</view>
+        </view>
+      </view>
+
+      <view class="empty-text" wx:else>当前还没有成员报名领取奖励。</view>
+    </view>
+
+    <view class="section-card" wx:if="{{dashboard.canView}}">
+      <view class="section-header">
+        <view class="section-title">活动数据简版</view>
+        <view class="section-tag">dataPermission</view>
+      </view>
+
+      <view class="stats-grid">
+        <view class="stat-card">
+          <view class="stat-value">{{dashboard.exposureUserCount}}</view>
+          <view class="stat-label">曝光人数</view>
+        </view>
+
+        <view class="stat-card">
+          <view class="stat-value">{{dashboard.detailClickUserCount}}</view>
+          <view class="stat-label">详情点击人数</view>
+        </view>
+
+        <view class="stat-card">
+          <view class="stat-value">{{dashboard.registerUserCount}}</view>
+          <view class="stat-label">报名人数</view>
+        </view>
+
+        <view class="stat-card" wx:if="{{!activity.isRewardClaim}}">
+          <view class="stat-value">{{dashboard.attendanceUserCount}}</view>
+          <view class="stat-label">实际参与人数</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{publicContent.tabs.length}}">
+      <view class="section-title">公开内容</view>
+
+      <view class="public-tab-row">
+        <view
+          class="public-tab-chip {{publicContentActiveTab === item.key ? 'public-tab-chip-active' : ''}}"
+          wx:for="{{publicContent.tabs}}"
+          wx:key="key"
+          data-tab="{{item.key}}"
+          bindtap="onPublicContentTabChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
+
+      <block wx:if="{{publicContent.currentTab}}">
+        <view class="public-summary-text">{{publicContent.currentTab.countText}}</view>
+
+        <view class="public-content-group" wx:if="{{publicContent.currentTab.featuredList.length}}">
+          <view class="public-content-group-title">精选内容</view>
+
+          <view
+            class="related-card related-card-clickable public-related-card"
+            wx:for="{{publicContent.currentTab.featuredList}}"
+            wx:key="_id"
+            data-scope="{{publicContent.currentTab.key}}"
+            data-record-id="{{item._id}}"
+            bindtap="goRelatedRecordDetail"
+          >
+            <view class="related-row">
+              <view class="related-main">
+                <view class="related-meta-row">
+                  <view class="public-featured-tag">精选</view>
+                  <view class="related-time">{{item.createdAtText}}</view>
+                </view>
+                <view class="related-preview">{{item.previewText}}</view>
+              </view>
+              <image class="related-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            </view>
+          </view>
+        </view>
+
+        <view class="public-content-group" wx:if="{{publicContent.currentTab.recentList.length}}">
+          <view class="public-content-group-title">最近内容</view>
+
+          <view
+            class="related-card related-card-clickable public-related-card"
+            wx:for="{{publicContent.currentTab.recentList}}"
+            wx:key="_id"
+            data-scope="{{publicContent.currentTab.key}}"
+            data-record-id="{{item._id}}"
+            bindtap="goRelatedRecordDetail"
+          >
+            <view class="related-row">
+              <view class="related-main">
+                <view class="related-meta-row">
+                  <view class="related-time">{{item.createdAtText}}</view>
+                </view>
+                <view class="related-preview">{{item.previewText}}</view>
+              </view>
+              <image class="related-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            </view>
+          </view>
+        </view>
+
+        <view class="empty-text" wx:if="{{!publicContent.currentTab.hasVisibleContent}}">
+          {{publicContent.currentTab.emptyText}}
+        </view>
+      </block>
+    </view>
+
+    <view class="section-card" wx:if="{{contentManage.visible}}">
+      <view class="section-header collapsible-header" bindtap="onToggleContentManageExpand">
+        <view class="section-title">内容审核与精选</view>
+        <view class="section-header-right">
+          <view class="section-tag">{{contentManage.totalCount}} 条</view>
+          <view class="section-tag">{{contentManageExpanded ? '收起' : '展开'}}</view>
+        </view>
+      </view>
+
+      <block wx:if="{{contentManageExpanded}}">
+        <view class="filter-row manage-filter-row">
+          <view
+            class="filter-chip manage-filter-chip {{contentManage.activeFilter === item.key ? 'manage-filter-chip-active' : ''}}"
+            wx:for="{{contentManage.filterOptions}}"
+            wx:key="key"
+            data-filter="{{item.key}}"
+            bindtap="onContentManageFilterChange"
+          >
+            {{item.label}}
+          </view>
+        </view>
+
+        <view class="manage-group" wx:if="{{contentManage.readingLogsFiltered.length}}">
+          <view class="manage-group-title">阅读打卡 · {{contentManage.readingLogCount}} 条</view>
+          <view class="related-card manage-card {{item.manageCardClass}}" wx:for="{{contentManage.readingLogsFiltered}}" wx:key="_id">
+            <view class="related-row">
+              <view class="related-main">
+                <view class="related-meta-row">
+                  <view class="related-type-tag {{item.statusTagClass}}">{{item.statusTagText}}</view>
+                  <view class="related-time">{{item.createdAtText}}</view>
+                </view>
+                <view class="related-preview manage-preview">{{item.previewText}}</view>
+              </view>
+              <image class="related-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            </view>
+
+            <view class="manage-action-row">
+              <button
+                class="content-action-btn light {{!!contentStatusUpdatingKey ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentBlockTap"
+                data-scope="reading"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey}}"
+              >
+                {{item.reviewStatus === 'blocked' ? '取消屏蔽' : '屏蔽'}}
+              </button>
+              <button
+                class="content-action-btn {{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked' ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentFeatureTap"
+                data-scope="reading"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked'}}"
+              >
+                {{item.isFeatured ? '取消精选' : '精选'}}
+              </button>
+            </view>
+          </view>
+        </view>
+
+        <view class="manage-group" wx:if="{{contentManage.lifeSharesFiltered.length}}">
+          <view class="manage-group-title">生活分享 · {{contentManage.lifeShareCount}} 条</view>
+          <view class="related-card manage-card {{item.manageCardClass}}" wx:for="{{contentManage.lifeSharesFiltered}}" wx:key="_id">
+            <view class="related-row">
+              <view class="related-main">
+                <view class="related-meta-row">
+                  <view class="related-type-tag {{item.statusTagClass}}">{{item.statusTagText}}</view>
+                  <view class="related-time">{{item.createdAtText}}</view>
+                </view>
+                <view class="related-preview manage-preview">{{item.previewText}}</view>
+              </view>
+              <image class="related-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            </view>
+
+            <view class="manage-action-row">
+              <button
+                class="content-action-btn light {{!!contentStatusUpdatingKey ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentBlockTap"
+                data-scope="life"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey}}"
+              >
+                {{item.reviewStatus === 'blocked' ? '取消屏蔽' : '屏蔽'}}
+              </button>
+              <button
+                class="content-action-btn {{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked' ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentFeatureTap"
+                data-scope="life"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked'}}"
+              >
+                {{item.isFeatured ? '取消精选' : '精选'}}
+              </button>
+            </view>
+          </view>
+        </view>
+
+        <view class="manage-group" wx:if="{{contentManage.rewardSharesFiltered.length}}">
+          <view class="manage-group-title">晒晒你的奖励 · {{contentManage.rewardShareCount}} 条</view>
+          <view class="related-card manage-card {{item.manageCardClass}}" wx:for="{{contentManage.rewardSharesFiltered}}" wx:key="_id">
+            <view class="related-row">
+              <view class="related-main">
+                <view class="related-meta-row">
+                  <view class="related-type-tag {{item.statusTagClass}}">{{item.statusTagText}}</view>
+                  <view class="related-time">{{item.createdAtText}}</view>
+                </view>
+                <view class="related-preview manage-preview">{{item.previewText}}</view>
+              </view>
+              <image class="related-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            </view>
+
+            <view class="manage-action-row">
+              <button
+                class="content-action-btn light {{!!contentStatusUpdatingKey ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentBlockTap"
+                data-scope="reward"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey}}"
+              >
+                {{item.reviewStatus === 'blocked' ? '取消屏蔽' : '屏蔽'}}
+              </button>
+              <button
+                class="content-action-btn {{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked' ? 'content-action-btn-disabled' : ''}}"
+                catchtap="onToggleContentFeatureTap"
+                data-scope="reward"
+                data-index="{{index}}"
+                disabled="{{!!contentStatusUpdatingKey || item.reviewStatus === 'blocked'}}"
+              >
+                {{item.isFeatured ? '取消精选' : '精选'}}
+              </button>
+            </view>
+          </view>
+        </view>
+
+        <view class="empty-text" wx:if="{{!contentManage.totalCount}}">当前活动还没有关联内容。</view>
+        <view class="empty-text" wx:elif="{{!contentManage.filteredTotalCount}}">当前筛选下没有内容。</view>
+      </block>
+    </view>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

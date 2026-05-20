@@ -1,0 +1,470 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading}}">
+    <view class="page-title">{{viewMode === 'overview' ? '数据中心' : (analyticsPageTitle || '趋势分析')}}</view>
+    <view class="page-desc">{{viewMode === 'overview' ? '正在加载活动数据、游戏数据、图书推荐和海报模板数据...' : '正在加载当前模块的趋势图和漏斗图...'}}</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="section-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+
+  <block wx:elif="{{viewMode !== 'overview'}}">
+    <view class="header-card">
+      <view class="page-title">{{analyticsPageTitle || activityTitle || '趋势分析'}}</view>
+      <view class="page-desc">{{analyticsPageDesc || '按时间维度查看趋势，并用漏斗结构观察转化链路。'}}</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">时间维度</view>
+      <view class="chip-row">
+        <view
+          class="dimension-chip {{dimension === item.key ? 'dimension-chip-active' : ''}}"
+          wx:for="{{dimensionOptions}}"
+          wx:key="key"
+          data-dimension="{{item.key}}"
+          bindtap="onDimensionChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">趋势折线图</view>
+        <view class="section-tag">至少保留 1 项</view>
+      </view>
+
+      <view class="metric-row">
+        <view
+          class="metric-chip {{item.checked ? 'metric-chip-active' : ''}}"
+          wx:for="{{metrics}}"
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onMetricToggle"
+          style="{{item.checked ? 'border-color:' + item.color + ';background:' + item.bgColor + ';color:' + item.color + ';' : ''}}"
+        >
+          <view class="metric-dot" style="background: {{item.color}};"></view>
+          <view>{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="chart-shell line-chart-box">
+        <canvas
+          canvas-id="lineChartCanvas"
+          class="chart-canvas"
+          width="{{lineChartWidth}}"
+          height="{{lineChartHeight}}"
+          style="height: {{lineChartHeight}}px;"
+        ></canvas>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">漏斗图</view>
+        <view class="section-tag">总转化 {{funnelOverview.totalRateText}}</view>
+      </view>
+
+      <view class="chart-shell funnel-chart-box">
+        <canvas
+          canvas-id="funnelChartCanvas"
+          class="chart-canvas"
+          width="{{funnelChartWidth}}"
+          height="{{funnelChartHeight}}"
+          style="height: {{funnelChartHeight}}px;"
+        ></canvas>
+      </view>
+
+      <view class="conversion-summary" wx:if="{{funnelOverview.stageRates.length}}">
+        <view class="conversion-summary-title">层间转化率</view>
+
+        <view class="conversion-list">
+          <view class="conversion-item" wx:for="{{funnelOverview.stageRates}}" wx:key="key">
+            <view class="conversion-label">{{item.label}}</view>
+            <view class="conversion-value">{{item.rateText}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="header-card">
+      <view class="page-title">数据中心</view>
+      <view class="page-desc">当前已拆分为活动数据、游戏数据、图书推荐数据和海报数据四个分区，游戏区已包含双盲作诗和诗词摊煎饼两条互动玩法。</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">数据分区</view>
+      <view class="chip-row">
+        <view
+          class="dimension-chip {{overviewTab === 'activity' ? 'dimension-chip-active' : ''}}"
+          data-tab="activity"
+          bindtap="onOverviewTabChange"
+        >
+          活动数据
+        </view>
+        <view
+          class="dimension-chip {{overviewTab === 'game' ? 'dimension-chip-active' : ''}}"
+          data-tab="game"
+          bindtap="onOverviewTabChange"
+        >
+          游戏数据
+        </view>
+        <view
+          class="dimension-chip {{overviewTab === 'recommendation' ? 'dimension-chip-active' : ''}}"
+          data-tab="recommendation"
+          bindtap="onOverviewTabChange"
+        >
+          图书推荐数据
+        </view>
+        <view
+          class="dimension-chip {{overviewTab === 'poster' ? 'dimension-chip-active' : ''}}"
+          data-tab="poster"
+          bindtap="onOverviewTabChange"
+        >
+          海报数据
+        </view>
+      </view>
+    </view>
+
+    <block wx:if="{{overviewTab === 'activity'}}">
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">活动数据</view>
+          <view class="section-tag">{{activityCards.length}} 场</view>
+        </view>
+
+        <block wx:if="{{activityCards.length}}">
+          <view class="data-card" wx:for="{{activityCards}}" wx:key="activityId">
+            <view class="data-card-header">
+              <view class="data-card-header-main">
+                <view class="data-card-title">{{item.title}}</view>
+                <view class="data-card-time">{{item.timeText}}</view>
+              </view>
+              <view class="data-card-link" bindtap="goActivityAnalytics" data-id="{{item.activityId}}" data-title="{{item.title}}">查看趋势分析</view>
+            </view>
+
+            <view class="stats-grid">
+              <view class="stat-card">
+                <view class="stat-value">{{item.exposureUserCount}}</view>
+                <view class="stat-label">曝光人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.detailClickUserCount}}</view>
+                <view class="stat-label">详情点击人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.registerUserCount}}</view>
+                <view class="stat-label">报名人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.attendanceUserCount}}</view>
+                <view class="stat-label">实际参与人数</view>
+              </view>
+            </view>
+
+            <view class="rate-row">
+              <view class="rate-text">点击率：{{item.clickRateText}}</view>
+              <view class="rate-text">报名转化率：{{item.registerConversionRateText}}</view>
+            </view>
+          </view>
+        </block>
+
+        <view class="empty-text" wx:else>当前还没有可展示的活动数据。</view>
+      </view>
+    </block>
+
+    <block wx:elif="{{overviewTab === 'game'}}">
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">双盲作诗总览</view>
+          <view class="section-tag">游戏数据</view>
+        </view>
+
+        <view class="stats-grid">
+          <view class="stat-card">
+            <view class="stat-value">{{gameStats.exposureUserCount}}</view>
+            <view class="stat-label">曝光量</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{gameStats.detailClickUserCount}}</view>
+            <view class="stat-label">点击详情页量</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{gameStats.participantUserCount}}</view>
+            <view class="stat-label">参与人数</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{gameStats.participationCount}}</view>
+            <view class="stat-label">参与人次</view>
+          </view>
+        </view>
+
+        <view class="rate-row">
+          <view class="rate-text">详情点击转化：{{gameStats.detailRateText}}</view>
+          <view class="rate-text">点击后参与转化：{{gameStats.participantRateText}}</view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-title">漏斗图</view>
+        <view class="funnel-list">
+          <view class="funnel-item" wx:for="{{gameFunnelStages}}" wx:key="key">
+            <view class="funnel-label">{{item.label}}</view>
+            <view class="funnel-bar-shell">
+              <view class="funnel-bar {{item.colorClass}}" style="width: {{item.widthPercent}}%;"></view>
+            </view>
+            <view class="funnel-value">{{item.value}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-title">按模式分组</view>
+        <block wx:if="{{gameModeStats.length}}">
+          <view class="mode-card" wx:for="{{gameModeStats}}" wx:key="mode">
+            <view class="mode-title">{{item.modeText}}</view>
+            <view class="mode-meta">参与人数：{{item.participantUserCount}}</view>
+            <view class="mode-meta">参与人次：{{item.participationCount}}</view>
+          </view>
+        </block>
+        <view class="empty-text" wx:else>当前还没有双盲作诗参与数据。</view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">诗词摊煎饼总览</view>
+          <view class="data-card-link" bindtap="goPoemPancakeAnalytics">查看趋势分析</view>
+        </view>
+
+        <view class="stats-grid">
+          <view class="stat-card">
+            <view class="stat-value">{{poemPancakeStats.exposureUserCount}}</view>
+            <view class="stat-label">曝光量</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{poemPancakeStats.detailClickUserCount}}</view>
+            <view class="stat-label">点击详情页量</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{poemPancakeStats.playUserCount}}</view>
+            <view class="stat-label">游玩人数</view>
+          </view>
+          <view class="stat-card">
+            <view class="stat-value">{{poemPancakeStats.totalCharCount}}</view>
+            <view class="stat-label">累计字数</view>
+          </view>
+        </view>
+
+        <view class="rate-row">
+          <view class="rate-text">详情点击转化：{{poemPancakeStats.detailRateText}}</view>
+          <view class="rate-text">点击后游玩转化：{{poemPancakeStats.playRateText}}</view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">摊煎饼漏斗图</view>
+          <view class="section-tag">{{poemPancakeStats.totalActivityCount}} 期</view>
+        </view>
+
+        <view class="funnel-list">
+          <view class="funnel-item" wx:for="{{poemPancakeFunnelStages}}" wx:key="key">
+            <view class="funnel-label">{{item.label}}</view>
+            <view class="funnel-bar-shell">
+              <view class="funnel-bar {{item.colorClass}}" style="width: {{item.widthPercent}}%;"></view>
+            </view>
+            <view class="funnel-value">{{item.value}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">每期字数统计</view>
+          <view class="section-tag">{{poemPancakeActivityCards.length}} 期</view>
+        </view>
+
+        <block wx:if="{{poemPancakeActivityCards.length}}">
+          <view class="data-card" wx:for="{{poemPancakeActivityCards}}" wx:key="activityId">
+            <view class="data-card-header">
+              <view class="data-card-header-main">
+                <view class="data-card-title">{{item.title}}</view>
+                <view class="data-card-time">{{item.timeText}}</view>
+              </view>
+              <view class="section-tag">{{item.statusText}}</view>
+            </view>
+
+            <view class="stats-grid">
+              <view class="stat-card">
+                <view class="stat-value">{{item.exposureUserCount}}</view>
+                <view class="stat-label">曝光人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.detailClickUserCount}}</view>
+                <view class="stat-label">点击人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.playUserCount}}</view>
+                <view class="stat-label">游玩人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.filledCharCount}}</view>
+                <view class="stat-label">已写字数</view>
+              </view>
+            </view>
+
+            <view class="rate-row">
+              <view class="rate-text">点击率：{{item.clickRateText}}</view>
+              <view class="rate-text">点击后游玩转化：{{item.playRateText}}</view>
+            </view>
+          </view>
+        </block>
+
+        <view class="empty-text" wx:else>当前还没有可展示的摊煎饼活动统计。</view>
+      </view>
+    </block>
+
+    <block wx:elif="{{overviewTab === 'recommendation'}}">
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">图书推荐数据</view>
+          <view class="section-tag">{{recommendationCards.length}} 期</view>
+        </view>
+
+        <block wx:if="{{recommendationCards.length}}">
+          <view class="data-card" wx:for="{{recommendationCards}}" wx:key="recommendationId">
+            <view class="data-card-header">
+              <view class="data-card-header-main">
+                <view class="data-card-title">{{item.title}}</view>
+                <view class="data-card-time">{{item.timeText}}</view>
+              </view>
+              <view class="section-tag" wx:if="{{item.isCurrent}}">当前推荐</view>
+            </view>
+
+            <view class="data-card-summary">{{item.summary}}</view>
+
+            <view class="stats-grid">
+              <view class="stat-card">
+                <view class="stat-value">{{item.exposureUserCount}}</view>
+                <view class="stat-label">曝光人数</view>
+              </view>
+              <view class="stat-card">
+                <view class="stat-value">{{item.clickUserCount}}</view>
+                <view class="stat-label">点击人数</view>
+              </view>
+            </view>
+
+            <view class="rate-row">
+              <view class="rate-text">点击率：{{item.clickRateText}}</view>
+            </view>
+          </view>
+        </block>
+
+        <view class="empty-text" wx:else>当前还没有可展示的图书推荐数据。</view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="section-card">
+        <view class="section-header">
+          <view class="section-title">海报模板数据</view>
+          <view class="section-tag">{{posterSummary.templateCount}} 模板</view>
+        </view>
+
+        <view class="poster-overview-layout">
+          <view class="poster-overview-gallery-panel">
+            <view class="poster-overview-panel-title">模板缩览</view>
+            <view class="poster-overview-gallery-grid" wx:if="{{posterCards.length}}">
+              <view class="poster-gallery-item" wx:for="{{posterCards}}" wx:key="templateKey">
+                <view class="poster-gallery-thumb">
+                  <image
+                    class="poster-gallery-image"
+                    wx:if="{{item.previewImageResolvedUrl}}"
+                    src="{{item.previewImageResolvedUrl}}"
+                    mode="aspectFill"
+                  ></image>
+                  <view class="poster-gallery-placeholder" wx:else>
+                    <view class="poster-gallery-placeholder-text">{{item.contentTypeText}}</view>
+                  </view>
+                </view>
+                <view class="poster-gallery-label">{{item.templateName}}</view>
+              </view>
+            </view>
+            <view class="poster-gallery-empty" wx:else>当前没有模板缩略图</view>
+          </view>
+
+          <view class="poster-overview-funnel-panel">
+            <view class="poster-overview-panel-title">数据漏斗</view>
+            <view class="poster-summary-funnel">
+              <view class="poster-summary-funnel-item" wx:for="{{posterSummaryFunnelStages}}" wx:key="key">
+                <view class="poster-summary-funnel-shell">
+                  <view class="poster-summary-funnel-shape" style="width: {{item.widthPercent}}%; background: {{item.color}};">
+                    {{item.label}}
+                  </view>
+                </view>
+                <view class="poster-summary-funnel-value">{{item.value}}</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card" wx:if="{{!posterCards.length}}">
+        <view class="empty-text">当前还没有可展示的海报模板数据。</view>
+      </view>
+
+      <block wx:else>
+        <view class="poster-card" wx:for="{{posterCards}}" wx:key="templateKey">
+          <view class="data-card-header">
+            <view class="data-card-header-main">
+              <view class="data-card-title">{{item.templateName}}</view>
+              <view class="data-card-time">{{item.contentTypeText}}</view>
+            </view>
+            <view class="section-tag">{{item.statusText}}</view>
+          </view>
+
+          <view class="poster-card-content">
+            <view class="poster-card-preview-shell">
+              <image
+                class="poster-card-preview"
+                wx:if="{{item.previewImageResolvedUrl}}"
+                src="{{item.previewImageResolvedUrl}}"
+                mode="aspectFill"
+              ></image>
+              <view class="poster-card-preview-placeholder" wx:else>
+                <view class="poster-card-preview-text">{{item.contentTypeText}}</view>
+              </view>
+            </view>
+
+            <view class="poster-card-body">
+              <view class="poster-card-funnel-header">
+                <view class="poster-card-funnel-title">数据漏斗</view>
+                <view class="poster-card-funnel-tip">竖版模板</view>
+              </view>
+
+              <view class="poster-card-funnel-list">
+                <view class="poster-card-funnel-item" wx:for="{{item.funnelStages}}" wx:key="key" wx:for-item="stage">
+                  <view class="poster-card-funnel-label">{{stage.label}}</view>
+                  <view class="poster-card-funnel-bar-shell">
+                    <view class="poster-card-funnel-bar" style="width: {{stage.widthPercent}}%; background: {{stage.color}};"></view>
+                  </view>
+                  <view class="poster-card-funnel-value">{{stage.value}}</view>
+                </view>
+              </view>
+
+              <view class="rate-row poster-card-meta">
+                <view class="rate-text">最近使用：{{item.lastUsedAtText || '暂无'}}</view>
+                <view class="rate-text">最近更新：{{item.updatedAtText || '暂无'}}</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+  </block>
+</view>

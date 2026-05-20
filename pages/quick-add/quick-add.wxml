@@ -1,0 +1,382 @@
+<view class="page">
+  <view class="hero-card">
+    <view class="hero-orb hero-orb-left"></view>
+    <view class="hero-orb hero-orb-right"></view>
+    <view class="hero-kicker">CONTENT STUDIO</view>
+    <view class="hero-head-row">
+      <view class="page-title">内容发布</view>
+      <view class="hero-state {{syncing ? 'hero-state-syncing' : ''}}">
+        {{syncing ? '静默同步中' : (hasContent ? '草稿自动保存' : '准备开始记录')}}
+      </view>
+    </view>
+    <view class="page-desc">统一发布阅读打卡、生活分享和奖励晒单，支持按内容类型关联不同活动。</view>
+    <view class="hero-badge-row">
+      <view class="hero-badge">阅读记录</view>
+      <view class="hero-badge">图片可传</view>
+      <view class="hero-badge">活动关联</view>
+    </view>
+  </view>
+
+  <view class="tab-row">
+    <view
+      class="tab-item {{activeTab === 'reading' ? 'tab-item-active' : ''}}"
+      data-tab="reading"
+      bindtap="onTabChange"
+    >
+      阅读打卡
+    </view>
+    <view
+      class="tab-item {{activeTab === 'life' ? 'tab-item-active' : ''}}"
+      data-tab="life"
+      bindtap="onTabChange"
+    >
+      生活分享
+    </view>
+    <view
+      class="tab-item {{activeTab === 'reward' ? 'tab-item-active' : ''}}"
+      data-tab="reward"
+      bindtap="onTabChange"
+      wx:if="{{showRewardTab}}"
+    >
+      晒晒你的奖励❤️
+    </view>
+  </view>
+
+  <view class="section-card editor-card" wx:if="{{activeTab === 'reading'}}">
+    <view class="editor-card-topline"></view>
+    <view class="editor-head">
+      <view class="section-title">阅读打卡</view>
+      <view class="section-desc editor-summary-block">记录一本书的阅读内容与感受，可选关联本次活动。</view>
+    </view>
+
+    <view class="editor-body">
+      <view class="editor-group">
+        <view class="editor-group-title">基础信息</view>
+
+        <view class="form-item reading-basic-item">
+          <view class="label">书名</view>
+          <input
+            class="input"
+            placeholder="请输入书名"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.bookTitle}}"
+            data-field="bookTitle"
+            bindinput="onReadingInput"
+          />
+        </view>
+
+        <view class="form-item reading-basic-item">
+          <view class="label">作者（选填）</view>
+          <input
+            class="input"
+            placeholder="请输入作者"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.author}}"
+            data-field="author"
+            bindinput="onReadingInput"
+          />
+        </view>
+
+        <view class="form-item reading-basic-item">
+          <view class="label">阅读时长（分钟）</view>
+          <input
+            class="input"
+            type="number"
+            placeholder="例如：45"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.duration}}"
+            data-field="duration"
+            bindinput="onReadingInput"
+          />
+        </view>
+
+        <view class="form-item reading-basic-item">
+          <view class="label">阅读页数 / 章节（选填）</view>
+          <input
+            class="input"
+            placeholder="例如：第20-35页 / 第3章"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.pagesOrChapter}}"
+            data-field="pagesOrChapter"
+            bindinput="onReadingInput"
+          />
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">图片与活动</view>
+
+        <view class="form-item">
+          <view class="label">阅读图片（选填）</view>
+
+          <view class="image-action-row">
+            <button class="image-action-btn" bindtap="onChooseReadingImages" disabled="{{readingSubmitting}}">
+              选择图片
+            </button>
+          </view>
+
+          <view class="image-grid" wx:if="{{readingForm.images.length}}">
+            <view class="image-item" wx:for="{{readingForm.images}}" wx:key="*this">
+              <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewReadingImage"></image>
+              <view class="image-remove" data-index="{{index}}" bindtap="onRemoveReadingImage">×</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="label-row">
+            <view class="label no-margin">关联活动（选填）</view>
+            <view
+              class="mini-associate-btn"
+              wx:if="{{currentReadingIncentiveActivityId && readingForm.activityId !== currentReadingIncentiveActivityId}}"
+              bindtap="onApplyCurrentReadingIncentiveActivity"
+            >
+              关联本期活动
+            </view>
+          </view>
+          <picker
+            mode="selector"
+            range="{{activityTitleOptions}}"
+            value="{{readingForm.activityIndex}}"
+            bindchange="onActivityChange"
+            data-scope="reading"
+          >
+            <view class="picker-field {{readingForm.activityTitle ? '' : 'picker-placeholder'}}">{{readingForm.activityTitle || '未关联活动'}}</view>
+          </picker>
+          <view class="picker-hint" wx:if="{{activitiesLoading}}">活动列表加载中...</view>
+          <view class="picker-hint subtle" wx:if="{{!activitiesLoading && !readingForm.activityId}}">
+            注意：关联上本期活动才可以计入本期月度激励打卡
+          </view>
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">内容填写</view>
+
+        <view class="form-item">
+          <view class="label">内容标题（选填）</view>
+          <input
+            class="input"
+            placeholder="给这次阅读内容起一个小标题"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.contentTitle}}"
+            data-field="contentTitle"
+            bindinput="onReadingInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <view class="label">一句话感悟（与摘抄二选一必填）</view>
+          <textarea
+            class="textarea"
+            placeholder="写一句你今天最想记下来的感受"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.insight}}"
+            data-field="insight"
+            bindinput="onReadingInput"
+            maxlength="100"
+          />
+          <view class="field-count">{{readingInsightCount}} / 100</view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">摘抄内容（与感悟二选一必填）</view>
+          <textarea
+            class="textarea"
+            placeholder="记录一句想保存下来的文字"
+            placeholder-class="field-placeholder"
+            value="{{readingForm.excerpt}}"
+            data-field="excerpt"
+            bindinput="onReadingInput"
+            maxlength="200"
+          />
+          <view class="field-count">{{readingExcerptCount}} / 200</view>
+        </view>
+      </view>
+
+      <button class="submit-btn primary-submit-btn" bindtap="submitReading" disabled="{{readingSubmitting}}">
+        {{readingSubmitting ? '提交中...' : '发布阅读打卡'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="section-card editor-card" wx:elif="{{activeTab === 'life'}}">
+    <view class="editor-card-topline"></view>
+    <view class="editor-head">
+      <view class="section-title">生活分享</view>
+      <view class="section-desc editor-summary-block">分享活动中的见闻与感受，可选关联本次活动。</view>
+    </view>
+
+    <view class="editor-body">
+      <view class="editor-group">
+        <view class="editor-group-title">内容设置</view>
+
+        <view class="form-item">
+          <view class="label">标题（选填）</view>
+          <input
+            class="input"
+            placeholder="给这条生活分享加一个标题"
+            placeholder-class="field-placeholder"
+            value="{{lifeForm.title}}"
+            data-field="title"
+            bindinput="onLifeInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <view class="label">分享内容</view>
+          <textarea
+            class="textarea textarea-large"
+            placeholder="写下今天想分享的内容"
+            placeholder-class="field-placeholder"
+            value="{{lifeForm.content}}"
+            data-field="content"
+            bindinput="onLifeInput"
+            maxlength="500"
+          />
+          <view class="picker-hint">已输入 {{lifeContentCount}} / 500 字</view>
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">图片与活动</view>
+
+        <view class="form-item">
+          <view class="label">分享图片（选填）</view>
+
+          <view class="image-action-row">
+            <button class="image-action-btn" bindtap="onChooseLifeImages" disabled="{{lifeSubmitting}}">
+              选择图片
+            </button>
+          </view>
+
+          <view class="image-grid" wx:if="{{lifeForm.images.length}}">
+            <view class="image-item" wx:for="{{lifeForm.images}}" wx:key="*this">
+              <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewLifeImage"></image>
+              <view class="image-remove" data-index="{{index}}" bindtap="onRemoveLifeImage">×</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">关联活动（选填）</view>
+          <picker
+            mode="selector"
+            range="{{activityTitleOptions}}"
+            value="{{lifeForm.activityIndex}}"
+            bindchange="onActivityChange"
+            data-scope="life"
+          >
+            <view class="picker-field {{lifeForm.activityTitle ? '' : 'picker-placeholder'}}">{{lifeForm.activityTitle || '未关联活动'}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <button class="submit-btn primary-submit-btn" bindtap="submitLifeShare" disabled="{{lifeSubmitting}}">
+        {{lifeSubmitting ? '发布中...' : '发布生活分享'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="section-card editor-card" wx:elif="{{activeTab === 'reward' && showRewardTab}}">
+    <view class="editor-card-topline"></view>
+    <view class="editor-head">
+      <view class="section-title">晒晒你的奖励❤️</view>
+      <view class="section-desc editor-summary-block">分享你领取到的奖励和心情，必须关联奖励领取活动，内容和图片至少填写一项。</view>
+    </view>
+
+    <view class="editor-body">
+      <view class="editor-group">
+        <view class="editor-group-title">晒单内容</view>
+
+        <view class="form-item">
+          <view class="label">标题（选填）</view>
+          <input
+            class="input"
+            placeholder="给这条奖励晒单加一个标题"
+            placeholder-class="field-placeholder"
+            value="{{rewardForm.title}}"
+            data-field="title"
+            bindinput="onRewardInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <view class="label">分享内容（与奖励图片二选一必填）</view>
+          <textarea
+            class="textarea textarea-large"
+            placeholder="写下你这次奖励领取的感受"
+            placeholder-class="field-placeholder"
+            value="{{rewardForm.content}}"
+            data-field="content"
+            bindinput="onRewardInput"
+            maxlength="500"
+          />
+          <view class="picker-hint">已输入 {{rewardContentCount}} / 500 字</view>
+        </view>
+      </view>
+
+      <view class="editor-group">
+        <view class="editor-group-title">图片与绑定活动</view>
+
+        <view class="form-item">
+          <view class="label">奖励图片（与分享内容二选一必填）</view>
+
+          <view class="image-action-row">
+            <button class="image-action-btn" bindtap="onChooseRewardImages" disabled="{{rewardSubmitting}}">
+              选择图片
+            </button>
+          </view>
+
+          <view class="image-grid" wx:if="{{rewardForm.images.length}}">
+            <view class="image-item" wx:for="{{rewardForm.images}}" wx:key="*this">
+              <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewRewardImage"></image>
+              <view class="image-remove" data-index="{{index}}" bindtap="onRemoveRewardImage">×</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="label">关联活动（必填）</view>
+          <picker
+            mode="selector"
+            range="{{rewardActivityTitleOptions}}"
+            value="{{rewardForm.activityIndex}}"
+            bindchange="onActivityChange"
+            data-scope="reward"
+          >
+            <view class="picker-field {{rewardForm.activityTitle ? '' : 'picker-placeholder'}}">{{rewardForm.activityTitle || '未关联活动'}}</view>
+          </picker>
+          <view class="picker-hint">这里只会显示奖励领取活动</view>
+        </view>
+      </view>
+
+      <button class="submit-btn primary-submit-btn" bindtap="submitRewardShare" disabled="{{rewardSubmitting}}">
+        {{rewardSubmitting ? '发布中...' : '发布奖励晒单'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="poster-dialog-mask" wx:if="{{posterPromptVisible}}" catchtouchmove="noop">
+    <view class="poster-dialog" catchtap="noop">
+      <view class="poster-dialog-title">{{posterPromptTitle}}</view>
+      <view class="poster-dialog-content">{{posterPromptContent}}</view>
+      <view class="poster-dialog-actions">
+        <view class="poster-dialog-btn poster-dialog-btn-secondary" bindtap="onPosterPromptCancel">取消</view>
+        <view class="poster-dialog-btn poster-dialog-btn-primary" bindtap="onPosterPromptConfirm">去制作海报</view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

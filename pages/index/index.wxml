@@ -1,0 +1,24 @@
+<view class="page">
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="page-title">校园读书会</view>
+    <view class="page-desc">正在检查账号状态并跳转...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="page-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

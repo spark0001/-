@@ -1,0 +1,103 @@
+<view class="page">
+  <view class="header-card">
+    <view class="page-title">报名参与读书会活动</view>
+    <view class="page-desc">
+      先完成报名信息填写并通过管理员审核，审核通过后才可进入读书会活动与互动内容。
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">活动说明</view>
+    <view class="section-text">
+      读书会围绕阅读、分享、线下交流与创意互动开展活动，请先填写下方信息，审核通过后再进入小程序使用。
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">近期活动</view>
+    <view class="activity-item">本月主题阅读：女性写作</view>
+    <view class="activity-item">线下分享会：小说人物讨论</view>
+    <view class="activity-item">创意互动：双盲作诗体验</view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">申请线下活动表单</view>
+
+    <view class="form-item">
+      <view class="label">姓名</view>
+      <input
+        class="input"
+        placeholder="请输入你的姓名"
+        value="{{form.name}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">年级 / 专业</view>
+      <input
+        class="input"
+        placeholder="例如：2024级 法学"
+        value="{{form.gradeMajor}}"
+        bindinput="onGradeMajorInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">申请理由</view>
+      <textarea
+        class="textarea"
+        placeholder="请简单介绍你为什么想报名参与线下读书会活动"
+        value="{{form.reason}}"
+        bindinput="onReasonInput"
+        maxlength="200"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">手机号（选填）</view>
+      <input
+        class="input"
+        placeholder="请输入手机号"
+        value="{{form.contact}}"
+        bindinput="onContactInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">申请口令</view>
+      <input
+        class="input"
+        placeholder="请输入申请口令"
+        value="{{form.applyPassphrase}}"
+        bindinput="onApplyPassphraseInput"
+      />
+    </view>
+
+    <button class="submit-btn" bindtap="onSubmit">
+      提交报名
+    </button>
+  </view>
+
+  <view class="notice-dialog-mask" wx:if="{{noticePromptVisible}}" catchtouchmove="noop">
+    <view class="notice-dialog-card" catchtap="noop">
+      <view class="notice-dialog-title">{{noticePromptTitle || '公告'}}</view>
+      <scroll-view class="notice-dialog-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <view class="notice-dialog-content">{{noticePromptContent}}</view>
+      </scroll-view>
+      <button class="notice-dialog-btn" bindtap="onNoticePromptConfirm">我知道了</button>
+    </view>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

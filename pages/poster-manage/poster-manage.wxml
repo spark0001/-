@@ -1,0 +1,485 @@
+<view class="page">
+  <view class="header-card">
+    <view class="hero-kicker">POSTER CONTROL CENTER</view>
+    <view class="hero-top">
+      <view class="page-title">分享海报管理</view>
+      <view class="header-status {{syncing ? 'is-loading' : 'is-ready'}}">{{syncing ? '同步中' : '已同步'}}</view>
+    </view>
+    <view class="page-desc">用固定字段池和参数表单维护分享海报模板，支持阅读打卡与创作互动结果海报统一走这一套管理链路。</view>
+    <view class="hero-meta-row">
+      <view class="hero-meta-pill">阅读打卡</view>
+      <view class="hero-meta-pill">生活分享</view>
+      <view class="hero-meta-pill">奖励晒单</view>
+      <view class="hero-meta-pill">创作互动模式A</view>
+      <view class="hero-meta-pill">创作互动模式C</view>
+      <view class="hero-meta-pill">诗词摊煎饼</view>
+      <view class="hero-meta-pill">活动海报</view>
+      <view class="hero-meta-pill">固定字段池</view>
+    </view>
+  </view>
+
+  <view class="section-card error-card" wx:if="{{errorMessage && !hasContent}}">
+    <view class="section-title">加载失败</view>
+    <view class="section-desc">{{errorMessage}}</view>
+  </view>
+
+  <block wx:else>
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">海报模板列表</view>
+        <view class="section-badge">{{filteredTemplateList.length}} 个模板</view>
+      </view>
+      <view class="section-desc">按内容类型维护模板。每种内容类型可同时启用多张模板，前台用户会在已启用模板中进行选择。</view>
+      <view class="template-filter-row">
+        <view
+          class="template-filter-chip {{templateStatusFilter === item.value ? 'is-active' : ''}}"
+          wx:for="{{templateStatusFilterOptions}}"
+          wx:key="value"
+          data-filter="{{item.value}}"
+          bindtap="onTemplateStatusFilterChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
+
+      <view class="template-list" wx:if="{{filteredTemplateList.length}}">
+        <view class="template-card" wx:for="{{filteredTemplateList}}" wx:key="templateId">
+          <view class="template-card-main">
+            <image class="template-thumb" src="{{item.backgroundImageUrl}}" mode="aspectFill" wx:if="{{item.backgroundImageUrl}}"></image>
+            <view class="template-thumb placeholder" wx:else>底图</view>
+
+            <view class="template-meta">
+              <view class="template-name-row">
+                <view class="template-name">{{item.templateName}}</view>
+                <view class="template-state {{item.enabled ? 'is-enabled' : 'is-disabled'}}">{{item.enabled ? '已启用' : '未启用'}}</view>
+              </view>
+              <view class="template-meta-text">适用类型：{{item.contentTypeText}}</view>
+              <view class="template-meta-text" wx:if="{{item.contentType === 'activity'}}">模板样式：{{item.templateStyleText || '简洁信息模板'}}</view>
+              <view class="template-meta-text">更新时间：{{item.updatedAtText || '暂未更新'}}</view>
+              <view class="template-meta-text" wx:if="{{item.description}}">{{item.description}}</view>
+            </view>
+          </view>
+
+          <view class="template-action-row">
+            <view class="mini-action-btn" bindtap="onEditTemplateTap" data-template-id="{{item.templateId}}">编辑</view>
+            <view class="mini-action-btn" bindtap="onPreviewTemplateTap" data-template-id="{{item.templateId}}">预览</view>
+            <view class="mini-action-btn {{item.enabled ? 'is-secondary' : 'is-primary'}}" bindtap="onToggleTemplateStatusTap" data-template-id="{{item.templateId}}">
+              {{item.enabled ? '停用' : '启用'}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty-card" wx:elif="{{templateList.length}}">
+        <view class="empty-title">当前筛选下还没有模板</view>
+        <view class="empty-desc">可以切换到“全部”，或者继续新增并启用新的海报模板。</view>
+      </view>
+
+      <view class="empty-card" wx:else>
+        <view class="empty-title">还没有海报模板</view>
+        <view class="empty-desc">先在下方编辑区新增第一张模板。</view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">{{form.templateId ? '编辑海报模板' : '新增海报模板'}}</view>
+        <view class="section-badge">{{form.templateId ? '编辑中' : '新模板'}}</view>
+      </view>
+      <view class="section-desc">通过固定字段池配置模板名称、底图、画布尺寸和每个字段的位置样式，避免后期维护复杂拖拽编辑器。</view>
+
+      <view class="form-group">
+        <view class="group-title">基础信息</view>
+        <view class="field-list">
+          <view class="field-block">
+            <view class="field-label">模板名称</view>
+            <input class="field-input" value="{{form.templateName}}" data-field="templateName" bindinput="onFormInput" placeholder="例如：阅读打卡竖版蓝调海报" placeholder-class="field-placeholder" />
+          </view>
+
+          <view class="field-block">
+            <view class="field-label">适用内容类型</view>
+            <picker mode="selector" range="{{contentTypeOptions}}" value="{{form.contentTypeIndex}}" bindchange="onContentTypeChange">
+              <view class="picker-field">{{contentTypeOptions[form.contentTypeIndex] || '请选择内容类型'}}</view>
+            </picker>
+            <view class="field-hint">所有模板类型都支持小程序码和管理员自定义文案；请在下方字段卡里分别上传、输入并调整位置。</view>
+          </view>
+
+          <view class="field-block" wx:if="{{form.contentType === 'activity'}}">
+            <view class="field-label">活动模板样式</view>
+            <picker mode="selector" range="{{activityTemplateStyleOptions}}" value="{{form.templateStyleIndex}}" bindchange="onActivityTemplateStyleChange">
+              <view class="picker-field">{{activityTemplateStyleOptions[form.templateStyleIndex] || '简洁信息模板'}}</view>
+            </picker>
+            <view class="field-hint">切换样式会自动带出推荐画布尺寸和活动海报字段布局。</view>
+          </view>
+
+          <view class="field-switch-row">
+            <view>
+              <view class="field-label">是否启用</view>
+              <view class="field-hint">启用后会进入同内容类型的用户可选模板列表，可与其他已启用模板同时生效。</view>
+            </view>
+            <switch checked="{{form.enabled}}" color="#4d7fff" bindchange="onEnabledSwitchChange" />
+          </view>
+
+          <view class="field-block">
+            <view class="field-label">模板说明</view>
+            <textarea class="field-textarea short" value="{{form.description}}" data-field="description" bindinput="onFormInput" placeholder="可选，备注模板适用场景或视觉风格" placeholder-class="field-placeholder" auto-height />
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="group-title">底图配置</view>
+        <view class="field-list">
+          <view class="field-block">
+            <view class="field-label">底图</view>
+            <view class="background-preview-shell">
+              <image class="background-preview" src="{{form.backgroundImageUrl}}" mode="aspectFill" wx:if="{{form.backgroundImageUrl}}"></image>
+              <view class="background-preview empty" wx:else>未上传底图</view>
+            </view>
+            <view class="action-btn-row">
+              <view class="mini-action-btn is-primary" bindtap="onChooseBackgroundTap">{{uploadingBackground ? '上传中...' : '上传底图'}}</view>
+              <view class="mini-action-btn is-secondary" bindtap="onClearBackgroundTap" wx:if="{{form.backgroundImageUrl}}">清空底图</view>
+            </view>
+            <view class="field-hint">上传底图后会自动同步画布尺寸，底图会按当前画板比例铺满预览区。</view>
+          </view>
+
+          <view class="field-grid two-column">
+            <view class="field-block">
+              <view class="field-label">画布宽度</view>
+              <input class="field-input" value="{{form.canvasWidth}}" data-field="canvasWidth" bindinput="onFormInput" placeholder="1080" placeholder-class="field-placeholder" />
+            </view>
+            <view class="field-block">
+              <view class="field-label">画布高度</view>
+              <input class="field-input" value="{{form.canvasHeight}}" data-field="canvasHeight" bindinput="onFormInput" placeholder="1920" placeholder-class="field-placeholder" />
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="group-title">编辑区预览</view>
+        <view class="group-subtitle">可直接拖动虚线框调整位置，拖右下角缩放模块范围；默认只显示行数，选中编辑、双击模块或缩放时会隐藏行数，只保留模块信息与字数参考。</view>
+        <view class="preview-toolbar">
+          <view class="preview-mode-row">
+            <view
+              class="preview-mode-chip {{previewResizeMode === item.value ? 'is-active' : ''}}"
+              wx:for="{{previewResizeModeOptions}}"
+              wx:key="value"
+              data-mode="{{item.value}}"
+              bindtap="onPreviewResizeModeTap"
+            >
+              {{item.label}}
+            </view>
+          </view>
+          <view class="preview-mode-desc">
+            {{previewResizeMode === 'fixedFont' ? '当前模式：改框大小会优先改变容纳字数与行数。' : '当前模式：改框大小会同步缩放字号与行高。'}}
+          </view>
+        </view>
+        <view class="preview-stage">
+          <view id="formPreviewShell" class="poster-preview-shell editable {{formPreviewModel.templateStyleClass}} {{formPreviewModel.backgroundImageUrl ? 'has-background' : ''}}" style="height: {{formPreviewModel.previewHeightRpx}}rpx;">
+            <image class="poster-preview-bg" src="{{formPreviewModel.backgroundImageUrl}}" mode="scaleToFill" wx:if="{{formPreviewModel.backgroundImageUrl}}"></image>
+            <view class="poster-preview-bg placeholder" wx:else>底图预览</view>
+
+            <block wx:for="{{formPreviewModel.imageLayerList}}" wx:key="key">
+              <image class="poster-preview-image" src="{{item.src}}" mode="aspectFill" style="{{item.style}}" wx:if="{{item.src}}"></image>
+              <view class="poster-preview-image placeholder" style="{{item.style}}" wx:else>{{item.label}}</view>
+            </block>
+            <view
+              class="poster-preview-code-layer"
+              style="{{formPreviewModel.miniProgramCodeLayer.style}}"
+              wx:if="{{formPreviewModel.miniProgramCodeLayer}}"
+            >
+              <image
+                class="poster-preview-code-image"
+                src="{{formPreviewModel.miniProgramCodeLayer.src}}"
+                mode="aspectFit"
+              ></image>
+            </view>
+
+            <view class="poster-preview-text" wx:for="{{formPreviewModel.textLayerList}}" wx:key="key" style="{{item.style}}">{{item.text}}</view>
+
+            <view
+              class="poster-preview-frame {{activePreviewFieldKey === item.key ? 'is-active' : ''}} {{expandedPreviewFieldKey === item.key || previewGestureFieldKey === item.key ? 'is-detailed' : ''}} {{item.locked ? 'is-locked' : ''}}"
+              wx:for="{{formPreviewModel.frameList}}"
+              wx:key="key"
+              style="{{item.style}}"
+              data-field-key="{{item.key}}"
+              data-kind="{{item.kind}}"
+              catchtouchstart="onPreviewFrameTouchStart"
+              catchtouchmove="onPreviewFrameTouchMove"
+              catchtouchend="onPreviewFrameTouchEnd"
+              catchtouchcancel="onPreviewFrameTouchEnd"
+            >
+              <view class="poster-preview-frame-header">
+                <view class="poster-preview-frame-title">{{item.label}}</view>
+                <view class="poster-preview-frame-meta">{{item.metaText}}</view>
+                <view class="poster-preview-frame-capacity">{{item.capacityText}}</view>
+              </view>
+              <view class="poster-preview-frame-footer">{{item.compactText}}</view>
+              <view
+                wx:if="{{!item.locked}}"
+                class="poster-preview-resize-handle"
+                data-field-key="{{item.key}}"
+                data-kind="{{item.kind}}"
+                data-action="resize"
+                catchtouchstart="onPreviewFrameTouchStart"
+                catchtouchmove="onPreviewFrameTouchMove"
+                catchtouchend="onPreviewFrameTouchEnd"
+                catchtouchcancel="onPreviewFrameTouchEnd"
+              ></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="group-title">字段配置</view>
+        <view class="group-subtitle">当前模板会按所选内容类型使用对应字段池。阅读打卡支持书名、作者、打卡日期、感想/摘录、昵称、头像和阅读指标；创作互动支持模式标题、题面、结果展示、双方作品与状态字段；所有模板都支持附加小程序码和管理员自定义文案。</view>
+
+        <view class="field-editor-list">
+          <view
+            class="field-editor-card {{activePreviewFieldKey === item.key ? 'is-active' : ''}} {{item.collapsed ? 'is-collapsed' : ''}} {{item.locked ? 'is-locked' : ''}}"
+            wx:for="{{fieldEditorList}}"
+            wx:key="key"
+            data-field-key="{{item.key}}"
+          >
+            <view class="field-editor-head">
+              <view class="field-editor-head-main" data-field-key="{{item.key}}" bindtap="onFieldCardTap">
+                <view class="field-editor-title">{{item.label}}</view>
+                <view class="field-editor-kind" wx:if="{{!item.collapsed}}">{{item.kind === 'image' ? '图片字段' : '文字字段'}}</view>
+                <view class="field-editor-summary" wx:if="{{!item.collapsed}}">{{item.summaryText}}</view>
+                <view class="field-editor-capacity" wx:if="{{!item.collapsed}}">{{item.capacityText}}</view>
+              </view>
+              <view class="field-editor-actions">
+                <view class="field-editor-control-btn {{item.locked ? 'is-active' : ''}}" data-field-key="{{item.key}}" catchtap="onFieldLockTap">
+                  {{item.locked ? '已固定' : '固定'}}
+                </view>
+                <view class="field-editor-control-btn" data-field-key="{{item.key}}" catchtap="onFieldCardTap">
+                  {{item.collapsed ? '展开' : '收起'}}
+                </view>
+              </view>
+            </view>
+
+            <view class="field-editor-lock-note" wx:if="{{item.locked && !item.collapsed}}">当前模块已固定，预览区和下方参数暂不可修改。</view>
+
+            <view wx:if="{{!item.collapsed}}">
+              <view class="field-switch-row field-editor-switch-row">
+                <view>
+                  <view class="field-label mini">是否显示</view>
+                  <view class="field-hint">关闭后会从预览区和最终海报中隐藏当前模块。</view>
+                </view>
+                <switch checked="{{item.visible}}" disabled="{{item.locked}}" color="#4d7fff" data-field-key="{{item.key}}" bindchange="onFieldSwitchChange" />
+              </view>
+
+              <view class="field-grid four-column">
+                <view class="field-block compact">
+                  <view class="field-label mini">横向位置</view>
+                  <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.x}}" data-field-key="{{item.key}}" data-prop="x" bindinput="onFieldInput" placeholder="0" placeholder-class="field-placeholder" />
+                </view>
+                <view class="field-block compact">
+                  <view class="field-label mini">纵向位置</view>
+                  <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.y}}" data-field-key="{{item.key}}" data-prop="y" bindinput="onFieldInput" placeholder="0" placeholder-class="field-placeholder" />
+                </view>
+                <view class="field-block compact">
+                  <view class="field-label mini">宽度</view>
+                  <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.width}}" data-field-key="{{item.key}}" data-prop="width" bindinput="onFieldInput" placeholder="0" placeholder-class="field-placeholder" />
+                </view>
+                <view class="field-block compact">
+                  <view class="field-label mini">高度</view>
+                  <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.height}}" data-field-key="{{item.key}}" data-prop="height" bindinput="onFieldInput" placeholder="0" placeholder-class="field-placeholder" />
+                </view>
+              </view>
+
+              <block wx:if="{{item.kind === 'text'}}">
+                <view class="field-grid four-column">
+                  <view class="field-block compact">
+                    <view class="field-label mini">字号</view>
+                    <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.fontSize}}" data-field-key="{{item.key}}" data-prop="fontSize" bindinput="onFieldInput" placeholder="28" placeholder-class="field-placeholder" />
+                  </view>
+                  <view class="field-block compact">
+                    <view class="field-label mini">颜色</view>
+                    <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.color}}" data-field-key="{{item.key}}" data-prop="color" bindinput="onFieldInput" placeholder="#17306a" placeholder-class="field-placeholder" />
+                  </view>
+                  <view class="field-block compact">
+                    <view class="field-label mini">{{item.key === 'reflectionText' ? '行间距' : '行高'}}</view>
+                    <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.lineHeight}}" data-field-key="{{item.key}}" data-prop="lineHeight" bindinput="onFieldInput" placeholder="40" placeholder-class="field-placeholder" />
+                  </view>
+                  <view class="field-block compact" wx:if="{{item.key !== 'customLineText'}}">
+                    <view class="field-label mini">最多行数</view>
+                    <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.maxLines}}" data-field-key="{{item.key}}" data-prop="maxLines" bindinput="onFieldInput" placeholder="2" placeholder-class="field-placeholder" />
+                  </view>
+                  <view class="field-block compact" wx:else>
+                    <view class="field-label mini">行数</view>
+                    <view class="picker-field compact is-disabled">固定 1 行</view>
+                  </view>
+                </view>
+
+                <view class="field-block compact" wx:if="{{item.key === 'customLineText'}}">
+                  <view class="field-label mini">文案内容</view>
+                  <input class="field-input mini" value="{{form.customLineText}}" data-field="customLineText" bindinput="onFormInput" maxlength="40" placeholder="例如：扫码加入本期共读" placeholder-class="field-placeholder" />
+                  <view class="field-hint">这行文案由管理员手动填写，预览和最终海报都会直接使用这里的内容。</view>
+                </view>
+
+                <view class="field-grid two-column">
+                  <view class="field-block compact">
+                    <view class="field-label mini">字重（粗细）</view>
+                    <picker mode="selector" range="{{fontWeightOptions}}" value="{{item.fontWeightIndex}}" disabled="{{item.locked}}" data-field-key="{{item.key}}" bindchange="onFieldFontWeightChange">
+                      <view class="picker-field compact {{item.locked ? 'is-disabled' : ''}}">{{fontWeightOptions[item.fontWeightIndex]}}</view>
+                    </picker>
+                  </view>
+                  <view class="field-block compact">
+                    <view class="field-label mini">对齐方式</view>
+                    <picker mode="selector" range="{{textAlignOptions}}" value="{{item.textAlignIndex}}" disabled="{{item.locked}}" data-field-key="{{item.key}}" bindchange="onFieldTextAlignChange">
+                      <view class="picker-field compact {{item.locked ? 'is-disabled' : ''}}">{{textAlignOptions[item.textAlignIndex]}}</view>
+                    </picker>
+                  </view>
+                </view>
+
+                <view class="field-switch-row" wx:if="{{item.key === 'bookTitle' && form.contentType === 'reading'}}">
+                  <view>
+                    <view class="field-label mini">书名自动加书名号</view>
+                    <view class="field-hint">编辑区预览和最终海报都会自动为书名补上同字号的《》书名号。</view>
+                  </view>
+                  <view class="field-hint">{{item.autoBookTitleQuotes ? '已开启' : '已关闭'}}</view>
+                </view>
+
+                <view class="field-block compact" wx:if="{{item.key === 'author' && form.contentType === 'reading'}}">
+                  <view class="field-label mini">与书名关系</view>
+                  <picker mode="selector" range="{{authorAttachOptions}}" value="{{item.authorAttachIndex}}" disabled="{{item.locked}}" data-field-key="{{item.key}}" bindchange="onAuthorAttachModeChange">
+                    <view class="picker-field compact {{item.locked ? 'is-disabled' : ''}}">{{authorAttachOptions[item.authorAttachIndex]}}</view>
+                  </picker>
+                  <view class="field-hint">选择贴靠后，会忽略作者自己的位置设置，自动贴在书名左侧或右侧。</view>
+                </view>
+
+                <view class="field-switch-row" wx:if="{{item.key === 'reflectionText'}}">
+                  <view>
+                    <view class="field-label mini">首段前加两个全角空格（可选）</view>
+                    <view class="field-hint">关闭时不加；开启后只有第一段会加两个全角空格，预览和实际海报都会同步生效。</view>
+                  </view>
+                  <switch
+                    checked="{{item.indentFirstLine}}"
+                    disabled="{{item.locked}}"
+                    color="#4d7fff"
+                    data-field-key="{{item.key}}"
+                    data-prop="indentFirstLine"
+                    bindchange="onFieldBooleanSwitchChange"
+                  />
+                </view>
+              </block>
+
+              <block wx:else>
+                <view class="field-grid one-column">
+                  <view class="field-block compact">
+                    <view class="field-label mini">圆角</view>
+                    <input class="field-input mini {{item.locked ? 'is-disabled' : ''}}" disabled="{{item.locked}}" value="{{item.borderRadius}}" data-field-key="{{item.key}}" data-prop="borderRadius" bindinput="onFieldInput" placeholder="0" placeholder-class="field-placeholder" />
+                  </view>
+                </view>
+
+                <view class="field-block compact qr-upload-block" wx:if="{{item.key === 'activityQrCode'}}">
+                  <view class="field-label mini">小程序码素材</view>
+                  <view class="field-hint">这里就是小程序码的上传与编辑入口；上传后可直接在当前字段卡里调整显示、位置和大小。</view>
+                  <view class="asset-preview-shell">
+                    <image class="asset-preview-image" src="{{form.miniProgramCodeUrl}}" mode="aspectFit" wx:if="{{form.miniProgramCodeUrl}}"></image>
+                    <view class="asset-preview-empty" wx:else>未上传小程序码</view>
+                  </view>
+                  <view class="action-btn-row">
+                    <view class="mini-action-btn is-primary" bindtap="onChooseMiniProgramCodeTap">
+                      {{uploadingMiniProgramCode ? '上传中...' : '上传小程序码'}}
+                    </view>
+                    <view class="mini-action-btn is-secondary" bindtap="onClearMiniProgramCodeTap" wx:if="{{form.miniProgramCodeUrl}}">清空小程序码</view>
+                  </view>
+                  <view class="field-hint">如果希望在海报里显示，请保持当前字段的“是否显示”为开启。</view>
+                </view>
+              </block>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="footer-action-row">
+        <view class="primary-btn {{saving ? 'is-disabled' : ''}}" bindtap="onSaveTemplateTap">{{saving ? '保存中...' : '保存海报模板'}}</view>
+        <view class="secondary-btn" bindtap="onResetFormTap">重置编辑区</view>
+      </view>
+      <view class="create-template-row">
+        <view class="mini-action-btn is-primary" bindtap="onCreateTemplateTap">增加新海报模板</view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">当前模板</view>
+        <view class="section-badge">{{activePreviewBadgeText}}</view>
+      </view>
+      <view class="section-desc">{{activePreviewSourceText}}</view>
+
+      <view class="preview-type-row">
+        <view
+          class="preview-type-chip {{activePreviewContentType === item.value ? 'is-active' : ''}}"
+          wx:for="{{previewContentTypeOptions}}"
+          wx:key="value"
+          data-content-type="{{item.value}}"
+          bindtap="onPreviewTypeChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
+
+      <block wx:if="{{activePreviewModel}}">
+        <view class="preview-stage">
+          <view class="poster-preview-shell large {{activePreviewModel.templateStyleClass}} {{activePreviewModel.backgroundImageUrl ? 'has-background' : ''}}" style="height: {{activePreviewModel.previewHeightRpx}}rpx;">
+            <image class="poster-preview-bg" src="{{activePreviewModel.backgroundImageUrl}}" mode="scaleToFill" wx:if="{{activePreviewModel.backgroundImageUrl}}"></image>
+            <view class="poster-preview-bg placeholder" wx:else>当前未配置底图</view>
+
+            <block wx:for="{{activePreviewModel.imageLayerList}}" wx:key="key">
+              <image class="poster-preview-image" src="{{item.src}}" mode="aspectFill" style="{{item.style}}" wx:if="{{item.src}}"></image>
+              <view class="poster-preview-image placeholder" style="{{item.style}}" wx:else>{{item.label}}</view>
+            </block>
+            <view
+              class="poster-preview-code-layer"
+              style="{{activePreviewModel.miniProgramCodeLayer.style}}"
+              wx:if="{{activePreviewModel.miniProgramCodeLayer}}"
+            >
+              <image
+                class="poster-preview-code-image"
+                src="{{activePreviewModel.miniProgramCodeLayer.src}}"
+                mode="aspectFit"
+              ></image>
+            </view>
+
+            <view class="poster-preview-text" wx:for="{{activePreviewModel.textLayerList}}" wx:key="key" style="{{item.style}}">{{item.text}}</view>
+          </view>
+        </view>
+
+        <view class="current-template-card" wx:if="{{activePreviewTemplateId}}">
+          <view class="template-name-row">
+            <view class="template-name">{{activePreviewTemplateName || '未命名模板'}}</view>
+            <view class="template-state {{activePreviewTemplateEnabled ? 'is-enabled' : 'is-disabled'}}">{{activePreviewTemplateEnabled ? '启用中' : '已停用'}}</view>
+          </view>
+          <view class="template-action-row">
+            <view class="mini-action-btn" bindtap="onEditCurrentTemplateTap">编辑</view>
+            <view class="mini-action-btn {{activePreviewTemplateEnabled ? 'is-secondary' : 'is-primary'}}" bindtap="onToggleCurrentTemplateStatusTap">
+              {{activePreviewTemplateEnabled ? '停用' : '启用'}}
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty-card" wx:else>
+        <view class="empty-title">当前内容类型还没有可预览的模板</view>
+        <view class="empty-desc">你可以先在上方新增模板，或者切换其他内容类型查看已启用模板列表。</view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

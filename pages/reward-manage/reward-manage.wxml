@@ -1,0 +1,271 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading}}">
+    <view class="page-title">奖励管理</view>
+    <view class="page-desc">正在加载奖励管理统计数据...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="section-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="header-card">
+      <view class="page-title">奖励管理</view>
+      <view class="page-desc">可在这里切换当前统计期次，并按所选激励阅读关联活动重算达标名单与奖励资格展示。</view>
+
+      <view class="picker-block">
+        <view class="picker-label">统计期次</view>
+        <picker
+          mode="selector"
+          range="{{readingIncentiveActivityOptions}}"
+          range-key="title"
+          value="{{selectedIncentiveActivityIndex}}"
+          bindchange="onReadingIncentiveActivityChange"
+          disabled="{{!readingIncentiveActivityList.length}}"
+        >
+          <view class="picker-field {{!readingIncentiveActivityList.length ? 'picker-field-disabled' : ''}}">
+            {{readingIncentiveActivityOptions[selectedIncentiveActivityIndex].title}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="page-desc" wx:if="{{statsActivity.activityId}}">当前按《{{statsActivity.title}}》统计。</view>
+      <view class="page-desc" wx:if="{{statsActivity.startDayKey && statsActivity.endDayKey}}">统计周期：{{statsActivity.startDayKey}} ~ {{statsActivity.endDayKey}}</view>
+      <view class="page-desc" wx:if="{{statsActivity.isCurrent}}">该活动同时是当前全局生效的激励阅读关联活动。</view>
+      <view class="page-desc" wx:if="{{!statsActivity.activityId}}">当前还没有可用于统计的激励阅读关联活动。</view>
+
+      <view class="badge-row">
+        <view class="status-badge approved">{{monthLabel || '本月奖励'}}</view>
+        <view class="status-badge light">rewardPermission</view>
+      </view>
+
+      <view class="action-row" wx:if="{{canPublishRewardActivity}}">
+        <view class="action-btn" bindtap="goAdmin">去发布奖励领取活动</view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">阅读激励规则配置</view>
+        <view class="section-tag">v1</view>
+      </view>
+
+      <view class="rule-summary-block" wx:if="{{currentReadingIncentiveRule.ruleId}}">
+        <view class="rule-summary-title">当前生效规则</view>
+        <view class="member-meta">生效方式：{{currentReadingIncentiveRule.effectText}}</view>
+        <view class="member-meta">关联活动：{{currentReadingIncentiveRule.activityTitle || '未选择'}}</view>
+        <view class="member-meta">附加条件：{{currentReadingIncentiveRule.requireOfflineAttendance ? '要求线下到场（校验所选活动本身）' : '不要求线下到场'}}</view>
+        <view class="member-meta">门槛规则：{{currentReadingIncentiveRule.thresholdTypeText}}{{currentReadingIncentiveRule.thresholdValue}}{{currentReadingIncentiveRule.thresholdUnitText}}</view>
+      </view>
+      <view class="empty-text" wx:else>当前还没有生效中的阅读激励规则。</view>
+
+      <view class="rule-summary-block pending" wx:if="{{scheduledReadingIncentiveRule.ruleId}}">
+        <view class="rule-summary-title">预约生效规则</view>
+        <view class="member-meta">生效方式：{{scheduledReadingIncentiveRule.effectText}}</view>
+        <view class="member-meta">关联活动：{{scheduledReadingIncentiveRule.activityTitle || '未选择'}}</view>
+        <view class="member-meta">附加条件：{{scheduledReadingIncentiveRule.requireOfflineAttendance ? '要求线下到场（校验所选活动本身）' : '不要求线下到场'}}</view>
+        <view class="member-meta">门槛规则：{{scheduledReadingIncentiveRule.thresholdTypeText}}{{scheduledReadingIncentiveRule.thresholdValue}}{{scheduledReadingIncentiveRule.thresholdUnitText}}</view>
+      </view>
+
+      <view class="rule-editor">
+        <view class="rule-editor-title">规则编辑区</view>
+
+        <view class="picker-label">生效方式</view>
+        <view class="choice-row">
+          <view
+            class="choice-chip {{readingRuleForm.effectMode === item.value ? 'choice-chip-active' : ''}}"
+            wx:for="{{effectModeOptions}}"
+            wx:key="value"
+            data-value="{{item.value}}"
+            bindtap="onRuleEffectModeTap"
+          >
+            {{item.label}}
+          </view>
+        </view>
+
+        <view class="rule-field-group" wx:if="{{readingRuleForm.effectMode === 'scheduled'}}">
+          <view class="picker-block">
+            <view class="picker-label">生效日期</view>
+            <picker mode="date" value="{{readingRuleForm.effectAtDate}}" bindchange="onRuleEffectDateChange">
+              <view class="picker-field">{{readingRuleForm.effectAtDate || '请选择日期'}}</view>
+            </picker>
+          </view>
+          <view class="picker-block">
+            <view class="picker-label">生效时间</view>
+            <picker mode="time" value="{{readingRuleForm.effectAtTime}}" bindchange="onRuleEffectTimeChange">
+              <view class="picker-field">{{readingRuleForm.effectAtTime || '请选择时间'}}</view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="picker-block">
+          <view class="picker-label">关联活动</view>
+          <picker
+            mode="selector"
+            range="{{ruleActivityOptions}}"
+            range-key="title"
+            value="{{readingRuleForm.activityIndex}}"
+            bindchange="onRuleActivityChange"
+            disabled="{{ruleActivityOptions.length <= 1}}"
+          >
+            <view class="picker-field {{ruleActivityOptions.length <= 1 ? 'picker-field-disabled' : ''}}">
+              {{ruleActivityOptions[readingRuleForm.activityIndex].title}}
+            </view>
+          </picker>
+          <view class="page-desc" wx:if="{{readingRuleForm.activityId && ruleActivityOptions[readingRuleForm.activityIndex].startDayKey}}">
+            活动周期：{{ruleActivityOptions[readingRuleForm.activityIndex].startDayKey}} ~ {{ruleActivityOptions[readingRuleForm.activityIndex].endDayKey}}
+          </view>
+          <view class="page-desc" wx:if="{{ruleActivityOptions.length <= 1}}">当前没有可配置的线下普通活动。</view>
+        </view>
+
+        <view class="switch-row">
+          <view>
+            <view class="picker-label no-margin">是否要求线下到场</view>
+            <view class="page-desc">第一版默认校验所选关联活动本身的到场状态。</view>
+          </view>
+          <switch checked="{{readingRuleForm.requireOfflineAttendance}}" bindchange="onRuleAttendanceChange" color="#1677ff" />
+        </view>
+
+        <view class="picker-label">门槛类型</view>
+        <view class="choice-row">
+          <view
+            class="choice-chip {{readingRuleForm.thresholdType === item.value ? 'choice-chip-active' : ''}}"
+            wx:for="{{thresholdTypeOptions}}"
+            wx:key="value"
+            data-value="{{item.value}}"
+            bindtap="onRuleThresholdTypeTap"
+          >
+            {{item.label}}
+          </view>
+        </view>
+
+        <view class="rule-field-group">
+          <view class="field-block field-block-grow">
+            <view class="picker-label">统计单位</view>
+            <view class="picker-field picker-field-readonly">天数（第一版固定）</view>
+          </view>
+          <view class="field-block">
+            <view class="picker-label">门槛数值</view>
+            <input
+              class="field-input"
+              type="number"
+              value="{{readingRuleForm.thresholdValue}}"
+              bindinput="onRuleThresholdValueInput"
+              placeholder="请输入天数"
+            />
+          </view>
+        </view>
+
+        <button
+          class="primary-btn"
+          bindtap="onSaveReadingRule"
+          disabled="{{savingReadingRule || ruleActivityOptions.length <= 1}}"
+        >
+          {{savingReadingRule ? '保存中...' : '保存阅读激励规则'}}
+        </button>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">奖励领取活动</view>
+        <view class="section-tag">{{rewardActivityList.length}} 场</view>
+      </view>
+
+      <block wx:if="{{rewardActivityList.length}}">
+        <view class="activity-card" wx:for="{{rewardActivityList}}" wx:key="_id" data-id="{{item._id}}" bindtap="goActivityDetail">
+          <view class="activity-title">{{item.title}}</view>
+          <view class="activity-meta">奖励标签：{{item.rewardLabel || monthLabel}}</view>
+          <view class="activity-meta">时间：{{item.timeText || '待定'}}</view>
+          <view class="activity-meta">已报名：{{item.registrationCount}} 人</view>
+        </view>
+      </block>
+
+      <view class="empty-text" wx:else>本月还没有发布奖励领取活动，可在活动管理页创建。</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">成员奖励状态</view>
+        <view class="section-tag">{{memberList.length}} 人</view>
+      </view>
+
+      <view class="filter-row">
+        <view
+          class="filter-chip {{filterValue === item.value ? 'filter-chip-active' : ''}}"
+          wx:for="{{filterOptions}}"
+          wx:key="value"
+          data-value="{{item.value}}"
+          bindtap="onFilterTap"
+        >
+          {{item.label}}
+        </view>
+      </view>
+
+      <block wx:if="{{memberList.length}}">
+        <view class="member-card" wx:for="{{memberList}}" wx:key="openid">
+          <view class="member-row">
+            <view class="avatar-box" wx:if="{{item.avatarUrl}}">
+              <image class="avatar-image" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+            </view>
+            <view class="avatar-box placeholder" wx:else>{{item.avatarText}}</view>
+
+            <view class="member-main">
+              <view class="member-header">
+                <view class="member-name">{{item.name || '未命名成员'}}</view>
+                <view class="status-badge {{item.isAchieved ? 'approved' : 'neutral'}}">
+                  {{item.isAchieved ? (currentReadingIncentiveRule.thresholdType === 'consecutive' ? '连续打卡达标' : '累计打卡达标') : '未达标'}}
+                </view>
+              </view>
+
+              <view class="member-meta">联系方式：{{item.contact || '未填写'}}</view>
+              <view class="member-meta">
+                当前规则{{currentReadingIncentiveRule.thresholdType === 'consecutive' ? '连续打卡' : '累计打卡'}}：{{item.completedCount}} / {{targetCount}}
+              </view>
+              <view class="member-meta">奖励领取活动：{{item.rewardActivityTitle || '未报名'}}</view>
+              <view class="member-meta" wx:if="{{item.isPendingReward}}">状态：未发奖励</view>
+              <view class="member-meta" wx:if="{{item.isRewarded}}">状态：已发奖励</view>
+              <view class="member-meta" wx:if="{{item.isRewarded}}">已发放标签：{{item.rewardTagText}}</view>
+              <view class="member-meta" wx:if="{{item.isWaived}}">状态：已标记放弃</view>
+            </view>
+          </view>
+
+          <view class="action-row compact-row" wx:if="{{item.isAchieved}}">
+            <button
+              class="action-btn"
+              bindtap="onMarkRewardTap"
+              data-openid="{{item.openid}}"
+              data-activity-id="{{item.rewardActivityId}}"
+              data-activity-title="{{item.rewardActivityTitle}}"
+              wx:if="{{item.isPendingReward}}"
+              disabled="{{markingOpenid === item.openid}}"
+            >
+              标记已发奖励
+            </button>
+            <button
+              class="action-btn"
+              bindtap="onCancelRewardTap"
+              data-openid="{{item.openid}}"
+              wx:if="{{item.isRewarded}}"
+              disabled="{{markingOpenid === item.openid}}"
+            >
+              取消已发奖励
+            </button>
+            <button
+              class="action-btn light"
+              bindtap="onMarkWaivedTap"
+              data-openid="{{item.openid}}"
+              disabled="{{markingOpenid === item.openid || item.isWaived || item.hasRewardActivityRegistration}}"
+            >
+              {{item.isWaived ? '已放弃' : '标记放弃'}}
+            </button>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty-text" wx:else>当前筛选条件下没有成员记录。</view>
+    </view>
+  </block>
+</view>

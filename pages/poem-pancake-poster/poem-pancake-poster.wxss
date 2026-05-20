@@ -1,0 +1,97 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(77, 118, 255, 0.18), transparent 34%),
+    radial-gradient(circle at top right, rgba(143, 182, 255, 0.2), transparent 28%),
+    linear-gradient(180deg, #f5f8ff 0%, #f7f9fc 32%, #f5f7fb 100%);
+  padding: 24rpx;
+  padding-bottom: 180rpx;
+  padding-bottom: calc(180rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.hero-card,
+.poster-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid rgba(219, 231, 255, 0.92);
+  box-shadow: 0 18rpx 40rpx rgba(44, 74, 155, 0.08);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  margin-bottom: 18rpx;
+  border-radius: 999rpx;
+  background: rgba(77, 118, 255, 0.1);
+  color: #4d76ff;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 1.6rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #17233d;
+  margin-bottom: 12rpx;
+}
+
+.page-desc {
+  font-size: 27rpx;
+  line-height: 1.7;
+  color: #63728d;
+}
+
+.poster-card {
+  padding: 20rpx;
+}
+
+.poster-image {
+  width: 100%;
+  border-radius: 24rpx;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.action-button {
+  flex: 1;
+  min-height: 92rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #4d86ff 0%, #315fe3 100%);
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.single-button {
+  margin-top: 24rpx;
+}
+
+.button-light {
+  background: #eef4ff;
+  color: #5d6d88;
+}
+
+.poster-canvas {
+  position: fixed;
+  left: -99999rpx;
+  top: -99999rpx;
+  opacity: 0;
+  pointer-events: none;
+}

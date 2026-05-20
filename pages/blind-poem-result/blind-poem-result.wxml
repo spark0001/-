@@ -1,0 +1,113 @@
+<view class="page">
+  <view class="hero-card loading-card" wx:if="{{loading}}">
+    <view class="hero-glow hero-glow-one"></view>
+    <view class="hero-glow hero-glow-two"></view>
+    <view class="hero-orbit hero-orbit-one"></view>
+    <view class="hero-orbit hero-orbit-two"></view>
+    <view class="hero-kicker">RESULT LOADING</view>
+    <view class="page-title">正在生成结果</view>
+    <view class="page-desc">请稍等，系统正在读取这一轮创作结果。</view>
+  </view>
+
+  <view class="hero-card loading-card" wx:elif="{{errorMessage}}">
+    <view class="hero-kicker">LOAD FAILED</view>
+    <view class="page-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="hero-card {{detail.accentClass}}">
+      <view class="hero-glow hero-glow-one"></view>
+      <view class="hero-glow hero-glow-two"></view>
+      <view class="hero-orbit hero-orbit-one"></view>
+      <view class="hero-orbit hero-orbit-two"></view>
+
+      <view class="hero-kicker">{{detail.heroKicker}}</view>
+
+      <view class="hero-title-row">
+        <view class="hero-copy">
+          <view class="page-title">{{detail.modeText}}</view>
+          <view class="page-desc">{{detail.promptTitle}}</view>
+        </view>
+        <view class="hero-floating-tag {{detail.statusToneClass}}">{{detail.statusTagText}}</view>
+      </view>
+
+      <view class="hero-badge-row">
+        <view class="hero-badge" wx:if="{{detail.createdAtText}}">完成于 {{detail.createdAtText}}</view>
+        <view class="hero-badge">{{detail.modeShortLabel}}</view>
+        <view class="hero-badge" wx:if="{{detail.theme}}">主题 {{detail.theme}}</view>
+        <view class="hero-badge" wx:if="{{detail.imageryText}}">意象 {{detail.imageryText}}</view>
+      </view>
+
+      <view class="prompt-panel">
+        <view class="prompt-panel-title">本轮题面</view>
+        <view class="prompt-text">{{detail.promptText}}</view>
+      </view>
+      <view class="status-text">{{detail.statusText}}</view>
+    </view>
+
+    <view class="section-card compact-card">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">参与阵列</view>
+        <view class="section-caption">双人协作</view>
+      </view>
+
+      <view class="participant-grid">
+        <view class="avatar-item" wx:for="{{detail.participants}}" wx:key="slotKey">
+          <view class="avatar-shell">
+            <image class="avatar-item-image" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+            <view class="avatar-item-placeholder" wx:else>{{item.avatarText}}</view>
+          </view>
+          <view class="participant-role">{{item.roleLabel}}</view>
+          <view class="participant-state">{{item.stateText}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card work-card my-card compact-card">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">{{detail.myTitle || '我的作品'}}</view>
+        <view class="work-tag">我的落笔</view>
+      </view>
+      <view class="content-box work-box">{{detail.myContent}}</view>
+    </view>
+
+    <view class="section-card work-card partner-card compact-card">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">{{detail.partnerTitle}}</view>
+        <view class="work-tag light">另一位写作者</view>
+      </view>
+      <view class="content-box work-box">{{detail.partnerContent}}</view>
+    </view>
+
+    <view class="section-card result-card {{detail.resultToneClass}}">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">结果展示</view>
+        <view class="result-tag">{{detail.statusTagText}}</view>
+      </view>
+      <view class="result-lead">{{detail.resultLeadText}}</view>
+      <view class="content-box result-box">{{detail.resultContent}}</view>
+    </view>
+
+    <view class="section-card action-card">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">下一步</view>
+        <view class="section-caption">你可以刷新当前轮次，或继续下一轮创作</view>
+      </view>
+
+      <button class="action-btn poster-btn" bindtap="onMakePosterTap">制作海报</button>
+
+      <view class="action-row">
+        <button class="action-btn light" bindtap="onRefreshTap">刷新结果</button>
+        <button class="action-btn" bindtap="onContinueTap">继续创作</button>
+      </view>
+
+      <view class="text-link" bindtap="goHistory">查看我的历史记录 ></view>
+    </view>
+  </block>
+</view>

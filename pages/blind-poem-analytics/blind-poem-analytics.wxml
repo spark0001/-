@@ -1,0 +1,70 @@
+<view class="page">
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="page-title">双盲作诗数据</view>
+    <view class="page-desc">正在加载曝光、点击和参与数据...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="page-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+    <button class="action-btn" bindtap="loadAnalytics">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="section-card">
+      <view class="page-title">双盲作诗数据</view>
+      <view class="page-desc">当前复用现有数据权限查看双盲作诗曝光、详情点击、参与人数、参与人次与漏斗转化。</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">总览</view>
+      <view class="stats-grid">
+        <view class="stat-card">
+          <view class="stat-value">{{stats.exposureUserCount}}</view>
+          <view class="stat-label">曝光量</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-value">{{stats.detailClickUserCount}}</view>
+          <view class="stat-label">点击详情页量</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-value">{{stats.participantUserCount}}</view>
+          <view class="stat-label">参与人数</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-value">{{stats.participationCount}}</view>
+          <view class="stat-label">参与人次</view>
+        </view>
+      </view>
+      <view class="rate-row">
+        <view class="rate-text">详情点击转化：{{stats.detailRateText}}</view>
+        <view class="rate-text">点击后参与转化：{{stats.participantRateText}}</view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">漏斗图</view>
+      <view class="funnel-list">
+        <view class="funnel-item" wx:for="{{funnelStages}}" wx:key="key">
+          <view class="funnel-label">{{item.label}}</view>
+          <view class="funnel-bar-shell">
+            <view class="funnel-bar {{item.colorClass}}" style="width: {{item.widthPercent}}%;"></view>
+          </view>
+          <view class="funnel-value">{{item.value}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">按模式分组</view>
+      <block wx:if="{{modeStats.length}}">
+        <view class="mode-card" wx:for="{{modeStats}}" wx:key="mode">
+          <view class="mode-title">{{item.modeText}}</view>
+          <view class="mode-meta">参与人数：{{item.participantUserCount}}</view>
+          <view class="mode-meta">参与人次：{{item.participationCount}}</view>
+        </view>
+      </block>
+      <view class="page-desc" wx:else>当前还没有双盲作诗参与数据。</view>
+    </view>
+  </block>
+</view>

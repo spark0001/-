@@ -1,0 +1,37 @@
+<view class="page">
+  <view class="section-card" wx:if="{{loading}}">
+    <view class="page-title">我的双盲作诗记录</view>
+    <view class="page-desc">正在加载你参与过的创作结果...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage}}">
+    <view class="page-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{historyList.length}}">
+    <view class="page-title">我的双盲作诗记录</view>
+
+    <view
+      class="history-card"
+      wx:for="{{historyList}}"
+      wx:key="roundId"
+      data-id="{{item.roundId}}"
+      bindtap="goResult"
+    >
+      <view class="history-top">
+        <view class="history-mode">{{item.modeText}}</view>
+        <view class="history-time">{{item.createdAtText}}</view>
+      </view>
+      <view class="history-prompt">{{item.promptText}}</view>
+      <view class="history-content">{{item.myContent}}</view>
+      <view class="history-result">{{item.resultSummary}}</view>
+      <view class="history-status">{{item.statusText}}</view>
+    </view>
+  </view>
+
+  <view class="section-card" wx:else>
+    <view class="page-title">我的双盲作诗记录</view>
+    <view class="empty-text">当前还没有参与记录，完成一轮创作后会在这里沉淀你的作品。</view>
+  </view>
+</view>

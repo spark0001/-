@@ -1,0 +1,9 @@
+{
+  "name": "miniprogram-2",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "sync:cloud-shared": "node scripts/sync-cloudfunction-shared.js",
+    "verify:engineering": "node scripts/verify-engineering-consistency.js"
+  }
+}

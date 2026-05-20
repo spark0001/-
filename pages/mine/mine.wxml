@@ -1,0 +1,540 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading && !hasContent}}">
+    <view class="page-title">我的</view>
+    <view class="page-desc">正在准备你的阅读档案、申请状态和打卡记录...</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage && !hasContent}}">
+    <view class="section-title">加载失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="header-card profile-hero-card">
+      <view class="profile-glow profile-glow-one"></view>
+      <view class="profile-glow profile-glow-two"></view>
+      <view class="profile-header-top">
+        <view class="profile-kicker">MY READING DESK</view>
+        <view class="header-sync-status {{syncing ? 'is-loading' : 'is-ready'}}">{{syncing ? '同步中' : '已同步'}}</view>
+      </view>
+
+      <view class="profile-row">
+        <view class="avatar-box" wx:if="{{profile.avatarUrl}}" bindtap="onAvatarTap">
+          <image class="avatar-image" src="{{profile.avatarUrl}}" mode="aspectFill"></image>
+        </view>
+        <view class="avatar-box placeholder" wx:else bindtap="onAvatarTap">{{profile.avatarText}}</view>
+
+        <view class="profile-main">
+          <view class="page-title">{{profile.displayName}}</view>
+          <view class="page-desc">{{profile.subtitle}}</view>
+          <view class="profile-signature {{profile.signatureFilled ? '' : 'muted'}}" wx:if="{{approvedUserVisible}}">
+            {{profile.signatureText}}
+          </view>
+        </view>
+      </view>
+
+      <view class="badge-row">
+        <view class="status-badge {{profile.userStatusClass}}">{{profile.userStatusText}}</view>
+        <view class="status-badge light">{{profile.roleText}}</view>
+      </view>
+
+      <view class="sync-tip" wx:if="{{syncing}}">后台正在静默刷新最新数据，当前已优先展示本地缓存。</view>
+      <view class="sync-tip error" wx:elif="{{errorMessage}}">{{errorMessage}}</view>
+    </view>
+
+    <view class="section-card clickable-card" wx:if="{{approvedUserVisible}}" bindtap="goProfile">
+      <view class="entry-card-row">
+        <view class="entry-card-main">
+          <view class="section-title">用户信息</view>
+          <view class="entry-card-desc">查看资料</view>
+        </view>
+        <view class="entry-card-arrow">></view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:else>
+      <view class="section-header">
+        <view class="section-title">报名状态</view>
+        <view class="status-badge {{application.statusClass}}">{{application.statusText}}</view>
+      </view>
+
+      <block wx:if="{{application.hasApplication}}">
+        <view class="info-row">
+          <view class="info-label">姓名</view>
+          <view class="info-value">{{application.name}}</view>
+        </view>
+
+        <view class="info-row">
+          <view class="info-label">年级 / 专业</view>
+          <view class="info-value">{{application.gradeMajor}}</view>
+        </view>
+
+        <view class="info-row">
+          <view class="info-label">联系方式</view>
+          <view class="info-value">{{application.contact}}</view>
+        </view>
+
+        <view class="info-row no-border">
+          <view class="info-label">提交时间</view>
+          <view class="info-value">{{application.createdAtText}}</view>
+        </view>
+
+        <view class="text-block" wx:if="{{application.reason}}">
+          <view class="text-label">申请理由</view>
+          <view class="text-content">{{application.reason}}</view>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="empty-text">你还没有提交线下活动报名信息，提交后这里会显示审核状态。</view>
+        <button class="secondary-btn" bindtap="goApply">去报名参与</button>
+      </block>
+    </view>
+
+    <view class="section-card" wx:if="{{approvedUserVisible}}">
+      <view class="section-header reading-section-header">
+        <view class="section-title">阅读概览</view>
+        <view class="reading-view-switch">
+          <view
+            class="reading-view-option {{readingViewMode === 'current' ? 'active' : ''}}"
+            data-view="current"
+            bindtap="onReadingViewChange"
+          >
+            本期
+          </view>
+          <view
+            class="reading-view-option {{readingViewMode === 'total' ? 'active' : ''}}"
+            data-view="total"
+            bindtap="onReadingViewChange"
+          >
+            总计
+          </view>
+        </view>
+      </view>
+
+      <block wx:if="{{readingViewMode === 'current'}}">
+        <view class="stats-grid reading-stats-grid">
+          <view class="stat-card reading-stat-card" wx:for="{{reading.currentStats}}" wx:key="key">
+            <view class="stat-value reading-stat-value">{{item.value}}</view>
+            <view class="stat-label reading-stat-label">{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="progress-box reading-progress-box">
+          <view class="progress-rule">{{reading.ruleText}}</view>
+          <view class="progress-main">
+            阅读激励进度
+            <text class="highlight">{{reading.completedCount}} / {{reading.targetCount}}</text>
+          </view>
+          <view class="progress-meta" wx:if="{{reading.attendanceText}}">{{reading.attendanceText}}</view>
+          <view class="progress-sub {{reading.progressTextClass}}">{{reading.progressText}}</view>
+        </view>
+
+        <view class="reading-visual-card">
+          <view class="visual-title">每日阅读</view>
+          <view class="visual-subtitle">最近7天阅读时长</view>
+
+          <view class="reading-bar-chart">
+            <view class="reading-bar-item" wx:for="{{reading.recentWeekBars}}" wx:key="dayKey">
+              <view class="reading-bar-stage">
+                <view class="{{item.fillClass}}" style="height: {{item.heightRpx}}rpx;">
+                  <text class="reading-bar-text" wx:if="{{item.hasValue}}">{{item.durationText}}</text>
+                </view>
+              </view>
+              <view class="{{item.dayClass}}">{{item.weekdayLabel}}</view>
+            </view>
+          </view>
+
+          <view class="reading-chart-meta">
+            <view class="reading-chart-meta-item">
+              平均：
+              <text class="reading-chart-meta-highlight">{{reading.recentWeekAverageText}}</text>
+            </view>
+            <view class="reading-chart-meta-item">
+              峰值：
+              <text class="reading-chart-meta-highlight">{{reading.recentWeekPeakText}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <block wx:elif="{{readingViewMode === 'total'}}">
+        <view class="stats-grid reading-stats-grid">
+          <view class="stat-card reading-stat-card" wx:for="{{reading.totalStats}}" wx:key="key">
+            <view class="stat-value reading-stat-value">{{item.value}}</view>
+            <view class="stat-label reading-stat-label">{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="reading-visual-card">
+          <view class="visual-head">
+            <view class="visual-heading">
+              <view class="visual-title">月度最爱</view>
+              <view class="visual-subtitle">{{readingFavoriteViewMode === 'month' ? reading.currentMonthFavoriteSubtitle : reading.annualFavoriteSubtitle}}</view>
+            </view>
+            <view class="visual-view-switch">
+              <view
+                class="visual-view-option {{readingFavoriteViewMode === 'month' ? 'active' : ''}}"
+                data-view="month"
+                bindtap="onReadingFavoriteViewChange"
+              >
+                当月
+              </view>
+              <view
+                class="visual-view-option {{readingFavoriteViewMode === 'year' ? 'active' : ''}}"
+                data-view="year"
+                bindtap="onReadingFavoriteViewChange"
+              >
+                年度
+              </view>
+            </view>
+          </view>
+
+          <block wx:if="{{readingFavoriteViewMode === 'month'}}">
+            <view
+              class="favorite-focus-card {{reading.currentMonthFavorite.hasData ? 'filled' : 'placeholder'}}"
+              style="{{reading.currentMonthFavorite.hasData ? reading.currentMonthFavorite.coverStyle : ''}}"
+            >
+              <view class="favorite-focus-month">{{reading.currentMonthFavorite.monthLabel}}</view>
+              <block wx:if="{{reading.currentMonthFavorite.hasData}}">
+                <view class="favorite-focus-caption">当月阅读时间最长</view>
+                <view class="favorite-focus-title">{{reading.currentMonthFavorite.bookTitle}}</view>
+                <view class="favorite-focus-duration">{{reading.currentMonthFavorite.durationText}}</view>
+              </block>
+              <block wx:else>
+                <view class="favorite-focus-placeholder-icon">书</view>
+                <view class="favorite-focus-placeholder-text">本月还没有阅读记录</view>
+              </block>
+            </view>
+          </block>
+
+          <block wx:else>
+            <view class="monthly-favorite-grid annual-mode">
+              <view class="monthly-favorite-item annual-item" wx:for="{{reading.monthlyFavorites}}" wx:key="month">
+                <view
+                  class="monthly-favorite-cover {{item.hasData ? 'filled' : 'placeholder'}}"
+                  style="{{item.hasData ? item.coverStyle : ''}}"
+                >
+                  <block wx:if="{{item.hasData}}">
+                    <view class="monthly-favorite-overlay">
+                      <view class="monthly-favorite-title">{{item.shortTitle}}</view>
+                      <view class="monthly-favorite-duration">{{item.durationText}}</view>
+                    </view>
+                  </block>
+                  <block wx:else>
+                    <view class="monthly-favorite-placeholder-icon">书</view>
+                  </block>
+                </view>
+                <view class="monthly-favorite-month">{{item.monthLabel}}</view>
+              </view>
+            </view>
+          </block>
+        </view>
+
+        <view class="reading-visual-card">
+          <view class="visual-head">
+            <view class="visual-heading">
+              <view class="visual-title">热力图</view>
+              <view class="visual-subtitle">{{readingHeatmapViewMode === 'month' ? reading.heatmapMonthSubtitle : reading.heatmapYearSubtitle}}</view>
+            </view>
+            <view class="visual-view-switch">
+              <view
+                class="visual-view-option {{readingHeatmapViewMode === 'month' ? 'active' : ''}}"
+                data-view="month"
+                bindtap="onReadingHeatmapViewChange"
+              >
+                月度
+              </view>
+              <view
+                class="visual-view-option {{readingHeatmapViewMode === 'year' ? 'active' : ''}}"
+                data-view="year"
+                bindtap="onReadingHeatmapViewChange"
+              >
+                年度
+              </view>
+            </view>
+          </view>
+
+          <block wx:if="{{readingHeatmapViewMode === 'month'}}">
+            <view class="heatmap-focus-card">
+              <view class="heatmap-focus-label">{{reading.currentMonthHeatmap.monthLabel}}</view>
+              <view class="heatmap-detail-popover" wx:if="{{readingMonthHeatmapDetail.visible}}">
+                <view class="heatmap-detail-date">{{readingMonthHeatmapDetail.dateText}}</view>
+                <view class="heatmap-detail-duration">{{readingMonthHeatmapDetail.durationText}}</view>
+              </view>
+              <view class="heatmap-weekday-row">
+                <view class="heatmap-weekday" wx:for="{{heatmapWeekdayLabels}}" wx:key="*this">{{item}}</view>
+              </view>
+              <view class="heatmap-calendar-grid">
+                <view
+                  class="heatmap-calendar-cell {{item.cellClass}} {{readingMonthHeatmapSelectedKey === item.key ? 'selected' : ''}}"
+                  wx:for="{{reading.currentMonthHeatmap.cells}}"
+                  wx:key="key"
+                  data-key="{{item.key}}"
+                  data-date-text="{{item.dateText}}"
+                  data-duration-text="{{item.durationText}}"
+                  data-placeholder="{{item.isPlaceholder}}"
+                  bindtap="onReadingMonthHeatmapCellTap"
+                >
+                  <text class="heatmap-calendar-day" wx:if="{{!item.isPlaceholder}}">{{item.dayText}}</text>
+                </view>
+              </view>
+            </view>
+          </block>
+
+          <block wx:else>
+            <view class="heatmap-month-list">
+              <view class="heatmap-month-card" wx:for="{{reading.annualHeatmapMonths}}" wx:key="month">
+                <view class="heatmap-month-label">{{item.monthLabel}}</view>
+                <view class="heatmap-grid">
+                  <view class="{{heatCell.cellClass}}" wx:for="{{item.cells}}" wx:key="key" wx:for-item="heatCell"></view>
+                </view>
+              </view>
+            </view>
+          </block>
+
+          <view class="heatmap-legend">
+            <view class="heatmap-legend-label">少</view>
+            <view class="heatmap-legend-scale">
+              <view class="heatmap-cell level-0 legend"></view>
+              <view class="heatmap-cell level-1 legend"></view>
+              <view class="heatmap-cell level-2 legend"></view>
+              <view class="heatmap-cell level-3 legend"></view>
+              <view class="heatmap-cell level-4 legend"></view>
+            </view>
+            <view class="heatmap-legend-label">多</view>
+          </view>
+        </view>
+      </block>
+
+      <block wx:if="{{recordList.length}}">
+        <view class="subsection-header">
+          <view class="subsection-title no-margin">我的打卡记录</view>
+          <view class="subsection-link" bindtap="goMyRecords">>>>查看更多</view>
+        </view>
+
+        <view class="record-card clickable-record-card" wx:for="{{recordList}}" wx:key="recordKey" data-index="{{index}}" bindtap="goRecordDetail">
+          <view class="record-main">
+            <view class="record-top">
+              <view class="record-tag {{item.typeClass}}">{{item.typeText}}</view>
+              <view class="record-time">{{item.createdAtText}}</view>
+            </view>
+            <view class="record-title">{{item.title}}</view>
+            <view class="record-summary" wx:if="{{item.summary}}">{{item.summary}}</view>
+            <view class="record-enter-text">点击查看详情</view>
+          </view>
+          <image class="record-thumb" wx:if="{{item.hasImage}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="subsection-header">
+          <view class="subsection-title no-margin">我的打卡记录</view>
+          <view class="subsection-link" bindtap="goMyRecords">>>>查看更多</view>
+        </view>
+        <view class="empty-text">你还没有发布过阅读打卡或生活分享。</view>
+      </block>
+    </view>
+
+    <view class="section-card manage-section" wx:if="{{applicationReviewVisible}}">
+      <view class="section-title">成员申请与审核</view>
+      <view class="section-hint">处理成员报名申请，保持成员池信息及时更新。</view>
+
+      <view class="settings-group">
+        <view class="settings-row no-border" bindtap="goApplicationReview">
+          <view class="settings-row-left">
+            <view class="settings-icon">审</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">成员申请审核</view>
+              <view class="settings-row-desc">查看并审核成员报名</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card manage-section" wx:if="{{activityPublishVisible || rewardManageVisible || bookRecommendationManageVisible}}">
+      <view class="section-title">首页</view>
+      <view class="section-hint">集中管理首页相关活动运营与推荐内容。</view>
+
+      <view class="settings-group">
+        <view
+          class="settings-row {{!rewardManageVisible && !bookRecommendationManageVisible ? 'no-border' : ''}}"
+          wx:if="{{activityPublishVisible}}"
+          bindtap="goAdmin"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">活</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">活动管理</view>
+              <view class="settings-row-desc">创建、编辑和发布活动</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+
+        <view
+          class="settings-row {{!bookRecommendationManageVisible ? 'no-border' : ''}}"
+          wx:if="{{rewardManageVisible}}"
+          bindtap="goRewardManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">奖</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">奖励管理</view>
+              <view class="settings-row-desc">管理奖励领取、发放和状态</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+
+        <view
+          class="settings-row no-border"
+          wx:if="{{bookRecommendationManageVisible}}"
+          bindtap="goBookRecommendationManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">书</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">图书推荐管理</view>
+              <view class="settings-row-desc">配置首页图书推荐与跳转内容</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card manage-section" wx:if="{{blindPoemManageVisible || posterManageVisible}}">
+      <view class="section-title">创作互动管理</view>
+      <view class="section-hint">管理双盲作诗、分享海报等创作互动玩法。</view>
+
+      <view class="settings-group">
+        <view
+          class="settings-row {{!posterManageVisible ? 'no-border' : ''}}"
+          wx:if="{{blindPoemManageVisible}}"
+          bindtap="goCreateManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">创</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">创作互动管理</view>
+              <view class="settings-row-desc">进入创作互动管理页</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+
+        <view
+          class="settings-row no-border"
+          wx:if="{{posterManageVisible}}"
+          bindtap="goPosterManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">海</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">分享海报管理</view>
+              <view class="settings-row-desc">配置分享海报模板与启用状态</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card manage-section" wx:if="{{dataCenterVisible}}">
+      <view class="section-title">数据中心</view>
+      <view class="section-hint">查看活动数据和游戏数据统计。</view>
+
+      <view class="settings-group">
+        <view class="settings-row no-border" bindtap="goDataCenterHome">
+          <view class="settings-row-left">
+            <view class="settings-icon">数</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">数据中心</view>
+              <view class="settings-row-desc">查看活动与游戏数据概览</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card manage-section" wx:if="{{visitorApplicationVisible || noticeManageVisible || permissionManageVisible}}">
+      <view class="section-header">
+        <view class="section-title">超级管理员管理区</view>
+        <view class="section-tag">superAdmin</view>
+      </view>
+      <view class="section-hint">保留超级管理员专用的公告、权限与访客申请管理。</view>
+
+      <view class="settings-group">
+        <view
+          class="settings-row {{!visitorApplicationVisible && !permissionManageVisible ? 'no-border' : ''}}"
+          wx:if="{{noticeManageVisible}}"
+          bindtap="goNoticeManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">公</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">公告管理</view>
+              <view class="settings-row-desc">编辑当前最新公告并控制启用状态</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+
+        <view
+          class="settings-row {{!permissionManageVisible ? 'no-border' : ''}}"
+          wx:if="{{visitorApplicationVisible}}"
+          bindtap="goVisitorApplicationList"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">访</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">访客申请管理</view>
+              <view class="settings-row-desc">查看外来访客报名记录</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+
+        <view
+          class="settings-row no-border"
+          wx:if="{{permissionManageVisible}}"
+          bindtap="goPermissionManage"
+        >
+          <view class="settings-row-left">
+            <view class="settings-icon">权</view>
+            <view class="settings-row-main">
+              <view class="settings-row-title">权限管理</view>
+              <view class="settings-row-desc">配置成员与管理员权限</view>
+            </view>
+          </view>
+          <view class="settings-row-arrow">></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{!approvedUserVisible}}">
+      <view class="section-title">快捷入口</view>
+
+      <view class="action-row">
+        <view class="action-btn light" bindtap="goApply">去报名参与</view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

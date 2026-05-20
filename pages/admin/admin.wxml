@@ -1,0 +1,755 @@
+<view class="page">
+  <view class="header-card">
+    <view class="page-title">活动管理</view>
+    <view class="page-desc">
+      这里用于创建或编辑活动。活动管理看 activityPermission，图片上传能力默认对所有人开放，权限字段由 superAdmin 在 users 集合中维护。
+    </view>
+
+    <view class="badge-row">
+      <view class="status-badge {{permission.activityPermission ? 'approved' : 'neutral'}}">
+        {{permission.activityPermission ? '可管理活动' : '无活动管理权限'}}
+      </view>
+      <view class="status-badge light">图片上传默认开放</view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">{{editingActivityId ? '编辑活动' : '创建活动'}}</view>
+
+    <view class="form-item">
+      <view class="label">活动标题<text class="label-required">（必填）</text></view>
+      <input
+        class="input"
+        placeholder="请输入活动标题"
+        value="{{form.title}}"
+        data-field="title"
+        bindinput="onFieldInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动时间<text class="label-required">（必填）</text></view>
+
+      <view class="picker-label">时间模式</view>
+      <picker mode="selector" range="{{timeTypeOptions}}" value="{{timeTypeIndex}}" bindchange="onTimeTypeChange">
+        <view class="picker-field">{{timeTypeOptions[timeTypeIndex]}}</view>
+      </picker>
+
+      <view class="picker-group" wx:if="{{form.timeType === 'singlePoint'}}">
+        <view class="picker-item">
+          <view class="picker-label">活动日期</view>
+          <picker mode="date" value="{{form.startDate}}" bindchange="onDateChange" data-field="startDate">
+            <view class="picker-field {{form.startDate ? '' : 'picker-placeholder'}}">
+              {{form.startDate || '请选择日期'}}
+            </view>
+          </picker>
+        </view>
+
+        <view class="picker-item">
+          <view class="picker-label">活动时间</view>
+          <picker mode="time" value="{{form.startTime}}" bindchange="onTimeChange" data-field="startTime">
+            <view class="picker-field">{{form.startTime}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="picker-group" wx:if="{{form.timeType === 'singleDayRange'}}">
+        <view class="picker-item">
+          <view class="picker-label">活动日期</view>
+          <picker mode="date" value="{{form.startDate}}" bindchange="onDateChange" data-field="startDate">
+            <view class="picker-field {{form.startDate ? '' : 'picker-placeholder'}}">
+              {{form.startDate || '请选择日期'}}
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="picker-group" wx:if="{{form.timeType === 'singleDayRange'}}">
+        <view class="picker-item">
+          <view class="picker-label">开始时间</view>
+          <picker mode="time" value="{{form.startTime}}" bindchange="onTimeChange" data-field="startTime">
+            <view class="picker-field">{{form.startTime}}</view>
+          </picker>
+        </view>
+
+        <view class="picker-item">
+          <view class="picker-label">结束时间</view>
+          <picker mode="time" value="{{form.endTime}}" bindchange="onTimeChange" data-field="endTime">
+            <view class="picker-field">{{form.endTime}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view wx:if="{{form.timeType === 'dateRange'}}">
+        <view class="picker-group">
+          <view class="picker-item">
+            <view class="picker-label">开始日期</view>
+            <picker mode="date" value="{{form.startDate}}" bindchange="onDateChange" data-field="startDate">
+              <view class="picker-field {{form.startDate ? '' : 'picker-placeholder'}}">
+                {{form.startDate || '请选择开始日期'}}
+              </view>
+            </picker>
+          </view>
+
+          <view class="picker-item">
+            <view class="picker-label">结束日期</view>
+            <picker mode="date" value="{{form.endDate}}" bindchange="onDateChange" data-field="endDate">
+              <view class="picker-field {{form.endDate ? '' : 'picker-placeholder'}}">
+                {{form.endDate || '请选择结束日期'}}
+              </view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="switch-row">
+          <view class="switch-text">填写具体时间点</view>
+          <switch checked="{{form.hasExactTime}}" bindchange="onExactTimeChange" color="#4d76ff" />
+        </view>
+
+        <view class="picker-group" wx:if="{{form.hasExactTime}}">
+          <view class="picker-item">
+            <view class="picker-label">开始时间</view>
+            <picker mode="time" value="{{form.startTime}}" bindchange="onTimeChange" data-field="startTime">
+              <view class="picker-field">{{form.startTime}}</view>
+            </picker>
+          </view>
+
+          <view class="picker-item">
+            <view class="picker-label">结束时间</view>
+            <picker mode="time" value="{{form.endTime}}" bindchange="onTimeChange" data-field="endTime">
+              <view class="picker-field">{{form.endTime}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+
+      <view class="time-preview" wx:if="{{form.timeText}}">
+        当前展示：{{form.timeText}}
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">发布时间</view>
+
+      <view class="switch-row">
+        <view class="switch-text">设置预约发布时间</view>
+        <switch checked="{{form.hasPublishSchedule}}" bindchange="onPublishScheduleChange" color="#4d76ff" />
+      </view>
+
+      <view class="picker-group" wx:if="{{form.hasPublishSchedule}}">
+        <view class="picker-item">
+          <view class="picker-label">发布日期</view>
+          <picker mode="date" value="{{form.publishDate}}" bindchange="onDateChange" data-field="publishDate">
+            <view class="picker-field {{form.publishDate ? '' : 'picker-placeholder'}}">
+              {{form.publishDate || '请选择发布日期'}}
+            </view>
+          </picker>
+        </view>
+
+        <view class="picker-item">
+          <view class="picker-label">发布时间</view>
+          <picker mode="time" value="{{form.publishTime}}" bindchange="onTimeChange" data-field="publishTime">
+            <view class="picker-field">{{form.publishTime}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="template-tip" wx:if="{{form.hasPublishSchedule && form.publishTimeText}}">
+        该活动将在 {{form.publishTimeText}} 前显示为预约活动，到点后自动对外发布。
+      </view>
+      <view class="template-tip" wx:else>不设置发布时间时，活动保存后立刻发布。</view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动形式</view>
+      <picker mode="selector" range="{{activityModeOptions}}" value="{{activityModeIndex}}" bindchange="onActivityModeChange">
+        <view class="picker-field">{{activityModeOptions[activityModeIndex]}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动类型</view>
+      <picker mode="selector" range="{{activityTypeOptions}}" value="{{activityTypeIndex}}" bindchange="onActivityTypeChange">
+        <view class="picker-field">{{activityTypeOptions[activityTypeIndex]}}</view>
+      </picker>
+      <view class="template-tip" wx:if="{{form.activityType === 'rewardClaim'}}">
+        当前活动将作为本月奖励领取活动发布，奖励标签：{{form.rewardLabel}}
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">激励阅读关联活动</view>
+      <switch
+        checked="{{form.isReadingIncentiveActivity}}"
+        disabled="{{form.activityMode !== 'offline' || form.activityType === 'rewardClaim'}}"
+        bindchange="onReadingIncentiveChange"
+        color="#4d76ff"
+      />
+      <view class="template-tip" wx:if="{{form.activityMode !== 'offline' || form.activityType === 'rewardClaim'}}">
+        仅线下普通活动可标记为激励阅读关联活动。
+      </view>
+      <view class="template-tip" wx:elif="{{form.isReadingIncentiveActivity}}">
+        保存后将把当前活动设为“当前激励阅读关联活动”，原当前活动会自动失效。
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动地点</view>
+      <input
+        class="input"
+        placeholder="请输入活动地点"
+        value="{{form.location}}"
+        data-field="location"
+        bindinput="onFieldInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动主题<text class="label-required">（必填）</text></view>
+      <input
+        class="input"
+        placeholder="请输入活动主题"
+        value="{{form.theme}}"
+        data-field="theme"
+        bindinput="onFieldInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">相关公众号链接<text class="label-optional">（选填）</text></view>
+      <input
+        class="input"
+        placeholder="请输入公众号文章链接（选填）"
+        value="{{form.officialAccountUrl}}"
+        data-field="officialAccountUrl"
+        bindinput="onFieldInput"
+      />
+      <view class="template-tip">填写后会在活动详情页的“主题”下方显示“相关公众号”入口。</view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">活动简介</view>
+      <textarea
+        class="textarea"
+        placeholder="请输入活动简介"
+        value="{{form.description}}"
+        data-field="description"
+        bindinput="onFieldInput"
+        maxlength="400"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">上传【详情页】封面图</view>
+
+      <view class="cover-panel">
+        <image class="cover-preview" wx:if="{{form.coverUrl}}" src="{{form.coverUrl}}" mode="aspectFill"></image>
+        <view class="cover-placeholder" wx:else>暂无封面图</view>
+      </view>
+
+      <view class="cover-tip">
+        上传【详情页】封面图
+      </view>
+
+      <view class="action-row">
+        <button
+          class="action-btn"
+          bindtap="onChooseCover"
+          disabled="{{uploadingCover}}"
+        >
+          {{uploadingCover ? '上传中...' : '上传封面'}}
+        </button>
+        <button
+          class="action-btn light"
+          bindtap="onClearCover"
+          disabled="{{!form.coverUrl}}"
+        >
+          清除封面
+        </button>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">【首页】活动图展示模板选择</view>
+      <picker mode="selector" range="{{templateTypeOptions}}" value="{{templateTypeIndex}}" bindchange="onTemplateTypeChange">
+        <view class="picker-field">{{templateTypeOptions[templateTypeIndex]}}</view>
+      </picker>
+      <view class="template-tip" wx:if="{{form.templateType === 'template1'}}">
+        首页将按固定卡片展示：左侧信息，右侧缩略图。
+      </view>
+      <view class="template-tip" wx:elif="{{form.templateType === 'template2'}}">
+        模板2继续沿用已有自由模板逻辑，本阶段不更换数据结构。
+      </view>
+      <view class="template-tip" wx:elif="{{form.templateType === 'template3'}}">
+        模板3用于首页横版海报展示，只显示图片，不显示活动文字信息。
+      </view>
+    </view>
+
+    <view class="form-item">
+      <view class="label">【首页】活动图展示调整</view>
+
+      <block wx:if="{{form.templateType === 'template1'}}">
+        <view class="template-tip">模板1继续保持左侧信息 + 右侧缩略图固定布局，下面调整的是首页右侧缩略图。</view>
+
+        <view
+          class="template1-thumb-editor"
+          wx:if="{{template1Preview.hasImage}}"
+          bindtouchstart="onTemplate1ThumbTouchStart"
+          catchtouchmove="onTemplate1ThumbTouchMove"
+          bindtouchend="onTemplate1ThumbTouchEnd"
+          bindtouchcancel="onTemplate1ThumbTouchEnd"
+        >
+          <image
+            class="template1-thumb-editor-image"
+            src="{{template1Preview.imageUrl}}"
+            mode="aspectFill"
+            style="{{template1Preview.imageStyle}}"
+          ></image>
+        </view>
+
+        <view class="template-element-placeholder square" wx:else>请先上传【详情页】封面图</view>
+
+        <view class="template-meta-text">{{template1Preview.metaText}}</view>
+
+        <view class="picker-label">缩略图缩放 {{template1Preview.scalePercent}}%</view>
+        <slider
+          min="100"
+          max="240"
+          step="1"
+          value="{{template1Preview.scalePercent}}"
+          activeColor="#4d76ff"
+          backgroundColor="#d9dee8"
+          block-color="#4d76ff"
+          disabled="{{!template1Preview.hasImage}}"
+          bindchanging="onTemplate1ScaleChange"
+          bindchange="onTemplate1ScaleChange"
+        />
+      </block>
+
+      <block wx:elif="{{form.templateType === 'template2'}}">
+        <view class="template-tip">模板2继续沿用前面几轮的自由模板逻辑，白色画板中的文字、图片和图形都可继续调整。</view>
+
+        <view class="template-editor-section">
+          <view class="section-subtitle">模板2画板</view>
+
+          <view class="picker-label">画板背景色</view>
+          <input
+            class="input"
+            value="{{form.templateData.backgroundColor}}"
+            placeholder="#F5F7FC"
+            bindinput="onTemplateBackgroundInput"
+          />
+
+          <view class="template2-editor-board white-board" style="{{template2Preview.boardStyle}}">
+            <movable-area class="template2-editor-area">
+              <movable-view
+                class="template2-editor-movable template2-editor-movable-shape"
+                wx:for="{{template2Preview.shapes}}"
+                wx:key="shapeId"
+                direction="all"
+                x="{{item.xPx}}"
+                y="{{item.yPx}}"
+                style="{{item.boxStyle}}"
+                data-index="{{index}}"
+                bindchange="onPreviewShapeChange"
+              >
+                <view class="template2-preview-shape template2-preview-shape-{{item.shapeClass}}" style="{{item.innerStyle}}">
+                  {{item.shapeText}}
+                </view>
+              </movable-view>
+
+              <movable-view
+                class="template2-editor-movable template2-editor-movable-image"
+                wx:if="{{template2Preview.image.hasImage}}"
+                direction="all"
+                x="{{template2Preview.image.xPx}}"
+                y="{{template2Preview.image.yPx}}"
+                style="{{template2Preview.image.boxStyle}}"
+                bindchange="onPreviewImageChange"
+              >
+                <image class="template2-preview-image" src="{{template2Preview.image.url}}" mode="aspectFill"></image>
+              </movable-view>
+
+              <block wx:for="{{template2Preview.textFields}}" wx:key="fieldKey">
+                <view
+                  class="template2-preview-text-field"
+                  wx:if="{{item.visible}}"
+                  style="{{item.style}}"
+                >
+                  {{item.text}}
+                </view>
+              </block>
+            </movable-area>
+
+            <view class="template2-preview-badge">模板2预览</view>
+          </view>
+        </view>
+
+        <view class="template-editor-section">
+          <view class="section-subtitle-row">
+            <view class="section-subtitle no-margin">文字元素</view>
+            <view class="section-toggle" data-panel="text" bindtap="onToggleTemplatePanel">
+              {{templatePanelExpanded.text ? '收起参数' : '展开参数'}}
+            </view>
+          </view>
+          <view class="template-tip">默认先用画板预览确认排版，需要精调时再展开参数。</view>
+
+          <block wx:if="{{templatePanelExpanded.text}}">
+            <view class="template-meta-text">{{template2Preview.textGroup.metaText}}</view>
+
+            <view class="picker-group">
+              <view class="picker-item full-width">
+                <view class="picker-label">统一文字宽度</view>
+                <input class="input" type="number" value="{{form.templateData.textGroup.width}}" data-field="width" bindinput="onTextGroupFieldInput" />
+              </view>
+            </view>
+
+            <view class="shape-editor-card" wx:for="{{template2Preview.textFields}}" wx:key="fieldKey">
+              <view class="shape-editor-header">
+                <view class="shape-editor-title">{{item.label}}</view>
+                <view class="template-meta-text no-margin">{{item.metaText}}</view>
+              </view>
+
+              <view class="switch-row">
+                <view class="switch-text">显示{{item.label}}</view>
+                <switch checked="{{item.visible}}" data-key="{{item.fieldKey}}" bindchange="onTextVisibilityChange" color="#4d76ff" />
+              </view>
+
+              <view class="picker-group">
+                <view class="picker-item">
+                  <view class="picker-label">X</view>
+                  <input class="input" type="number" value="{{item.x}}" data-key="{{item.fieldKey}}" data-field="x" bindinput="onTextFieldInput" />
+                </view>
+                <view class="picker-item">
+                  <view class="picker-label">Y</view>
+                  <input class="input" type="number" value="{{item.y}}" data-key="{{item.fieldKey}}" data-field="y" bindinput="onTextFieldInput" />
+                </view>
+              </view>
+
+              <view class="picker-group">
+                <view class="picker-item">
+                  <view class="picker-label">字体大小</view>
+                  <input class="input" type="number" value="{{item.fontSize}}" data-key="{{item.fieldKey}}" data-field="fontSize" bindinput="onTextFieldInput" />
+                </view>
+                <view class="picker-item">
+                  <view class="picker-label">文字颜色</view>
+                  <input class="input" value="{{item.color}}" data-key="{{item.fieldKey}}" data-field="color" bindinput="onTextFieldInput" placeholder="#222222" />
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+
+        <view class="template-editor-section">
+          <view class="section-subtitle-row">
+            <view class="section-subtitle no-margin">图片元素</view>
+            <view class="section-toggle" data-panel="image" bindtap="onToggleTemplatePanel">
+              {{templatePanelExpanded.image ? '收起参数' : '展开参数'}}
+            </view>
+          </view>
+
+          <view class="template-element-panel">
+            <image class="template-element-preview" wx:if="{{form.templateData.imageElement.url}}" src="{{form.templateData.imageElement.url}}" mode="aspectFill"></image>
+            <view class="template-element-placeholder" wx:else>当前还没有模板主图</view>
+          </view>
+
+          <view class="action-row compact-row">
+            <button
+              class="action-btn"
+              bindtap="onChooseTemplateImage"
+              disabled="{{uploadingTemplateAsset}}"
+            >
+              {{uploadingTemplateAsset ? '上传中...' : '上传模板主图'}}
+            </button>
+            <button
+              class="action-btn light"
+              bindtap="onClearTemplateImage"
+              disabled="{{!form.templateData.imageElement.url}}"
+            >
+              清除主图
+            </button>
+          </view>
+          <view class="template-tip">主图可直接在画板中拖动位置，参数默认折叠。</view>
+
+          <block wx:if="{{templatePanelExpanded.image}}">
+            <view class="template-meta-text">{{template2Preview.image.metaText}}</view>
+
+            <view class="picker-group">
+              <view class="picker-item">
+                <view class="picker-label">X</view>
+                <input class="input" type="number" value="{{form.templateData.imageElement.x}}" data-field="x" bindinput="onImageElementFieldInput" />
+              </view>
+              <view class="picker-item">
+                <view class="picker-label">Y</view>
+                <input class="input" type="number" value="{{form.templateData.imageElement.y}}" data-field="y" bindinput="onImageElementFieldInput" />
+              </view>
+            </view>
+
+            <view class="picker-group">
+              <view class="picker-item">
+                <view class="picker-label">宽度</view>
+                <input class="input" type="number" value="{{form.templateData.imageElement.width}}" data-field="width" bindinput="onImageElementFieldInput" />
+              </view>
+              <view class="picker-item">
+                <view class="picker-label">高度</view>
+                <input class="input" type="number" value="{{form.templateData.imageElement.height}}" data-field="height" bindinput="onImageElementFieldInput" />
+              </view>
+            </view>
+          </block>
+        </view>
+
+        <view class="template-editor-section">
+          <view class="section-subtitle-row">
+            <view class="section-subtitle no-margin">图形元素</view>
+            <view class="section-toggle" data-panel="shapes" bindtap="onToggleTemplatePanel">
+              {{templatePanelExpanded.shapes ? '收起参数' : '展开参数'}}
+            </view>
+          </view>
+          <button class="secondary-btn small-btn" bindtap="onAddShapeTap">新增图形元素</button>
+          <view class="template-tip">图形可直接在画板中拖动位置，颜色与尺寸在展开参数后细调。</view>
+
+          <block wx:if="{{form.templateData.shapes.length && templatePanelExpanded.shapes}}">
+            <view class="shape-editor-card" wx:for="{{form.templateData.shapes}}" wx:key="shapeId">
+              <view class="shape-editor-header">
+                <view class="shape-editor-title">图形 {{index + 1}}</view>
+                <view class="shape-editor-remove" data-index="{{index}}" bindtap="onRemoveShapeTap">删除</view>
+              </view>
+
+              <view class="picker-label">图形类型</view>
+              <picker
+                mode="selector"
+                range="{{shapeTypeOptions}}"
+                value="{{item.shapeTypeIndex}}"
+                bindchange="onShapeTypeChange"
+                data-index="{{index}}"
+              >
+                <view class="picker-field">{{shapeTypeOptions[item.shapeTypeIndex]}}</view>
+              </picker>
+
+              <view class="template-meta-text">拖动画板中的图形，可实时更新这里的 X / Y。</view>
+
+              <view class="picker-group">
+                <view class="picker-item">
+                  <view class="picker-label">X</view>
+                  <input class="input" type="number" value="{{item.x}}" data-index="{{index}}" data-field="x" bindinput="onShapeFieldInput" />
+                </view>
+                <view class="picker-item">
+                  <view class="picker-label">Y</view>
+                  <input class="input" type="number" value="{{item.y}}" data-index="{{index}}" data-field="y" bindinput="onShapeFieldInput" />
+                </view>
+              </view>
+
+              <view class="picker-group">
+                <view class="picker-item">
+                  <view class="picker-label">宽度</view>
+                  <input class="input" type="number" value="{{item.width}}" data-index="{{index}}" data-field="width" bindinput="onShapeFieldInput" />
+                </view>
+                <view class="picker-item">
+                  <view class="picker-label">高度</view>
+                  <input class="input" type="number" value="{{item.height}}" data-index="{{index}}" data-field="height" bindinput="onShapeFieldInput" />
+                </view>
+              </view>
+
+              <view class="form-item tight">
+                <view class="picker-label">颜色预览</view>
+                <view class="shape-color-preview-row">
+                  <view class="shape-color-chip" style="background: {{item.color}};"></view>
+                  <view class="shape-color-value">{{item.color}}</view>
+                </view>
+              </view>
+
+              <view class="form-item tight">
+                <view class="picker-label">色相 {{item.colorHue}}°</view>
+                <slider
+                  min="0"
+                  max="360"
+                  step="1"
+                  value="{{item.colorHue}}"
+                  activeColor="#4d76ff"
+                  backgroundColor="#d9dee8"
+                  block-color="#4d76ff"
+                  bindchanging="onShapeColorSliderChange"
+                  bindchange="onShapeColorSliderChange"
+                  data-index="{{index}}"
+                  data-field="colorHue"
+                />
+              </view>
+
+              <view class="form-item tight">
+                <view class="picker-label">饱和度 {{item.colorSaturation}}%</view>
+                <slider
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="{{item.colorSaturation}}"
+                  activeColor="#4d76ff"
+                  backgroundColor="#d9dee8"
+                  block-color="#4d76ff"
+                  bindchanging="onShapeColorSliderChange"
+                  bindchange="onShapeColorSliderChange"
+                  data-index="{{index}}"
+                  data-field="colorSaturation"
+                />
+              </view>
+
+              <view class="form-item tight">
+                <view class="picker-label">明度 {{item.colorLightness}}%</view>
+                <slider
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="{{item.colorLightness}}"
+                  activeColor="#4d76ff"
+                  backgroundColor="#d9dee8"
+                  block-color="#4d76ff"
+                  bindchanging="onShapeColorSliderChange"
+                  bindchange="onShapeColorSliderChange"
+                  data-index="{{index}}"
+                  data-field="colorLightness"
+                />
+              </view>
+
+              <view class="form-item tight">
+                <view class="picker-label">透明度 {{item.opacity}}%</view>
+                <slider
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="{{item.opacity}}"
+                  activeColor="#4d76ff"
+                  backgroundColor="#d9dee8"
+                  block-color="#4d76ff"
+                  bindchanging="onShapeOpacityChange"
+                  bindchange="onShapeOpacityChange"
+                  data-index="{{index}}"
+                />
+              </view>
+            </view>
+          </block>
+          <view class="template-tip" wx:elif="{{!form.templateData.shapes.length}}">当前还没有图形元素，点击上方按钮新增。</view>
+          <view class="template-tip" wx:else>已添加 {{form.templateData.shapes.length}} 个图形元素，点击“展开参数”查看详细设置。</view>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="template-tip">模板3用于首页横版海报展示，只渲染图片。这里上传的是首页活动图，不影响活动详情页完整信息展示。</view>
+
+        <view class="template-editor-section">
+          <view class="section-subtitle">模板3海报图</view>
+
+          <view class="template-element-panel template3-panel">
+            <image class="template-element-preview template3-preview" wx:if="{{form.templateData.imageElement.url}}" src="{{form.templateData.imageElement.url}}" mode="aspectFill"></image>
+            <view class="template-element-placeholder template3-preview" wx:else>当前还没有模板3海报图</view>
+          </view>
+
+          <view class="action-row compact-row">
+            <button
+              class="action-btn"
+              bindtap="onChooseTemplateImage"
+              disabled="{{uploadingTemplateAsset}}"
+            >
+              {{uploadingTemplateAsset ? '上传中...' : '上传首页海报图'}}
+            </button>
+            <button
+              class="action-btn light"
+              bindtap="onClearTemplateImage"
+              disabled="{{!form.templateData.imageElement.url}}"
+            >
+              清除海报图
+            </button>
+          </view>
+
+          <view class="template-tip">首页近期活动遇到模板3时，将只显示这张图片；活动详情页仍按现有逻辑显示完整标题、时间、地点和主题。</view>
+        </view>
+      </block>
+    </view>
+
+    <view class="submit-action-group">
+      <button class="submit-btn" bindtap="onSubmit" disabled="{{!permission.activityPermission || submitting}}">
+        {{submitting ? '保存中...' : (editingActivityId ? '保存活动' : '发布活动')}}
+      </button>
+
+      <button
+        class="duplicate-btn"
+        wx:if="{{editingActivityId}}"
+        bindtap="onDuplicatePublishTap"
+        disabled="{{!permission.activityPermission || submitting}}"
+      >
+        复制并发布新活动
+      </button>
+      <view class="template-tip" wx:if="{{editingActivityId && duplicateHintText}}">
+        {{duplicateHintText}}
+      </view>
+
+      <button class="secondary-btn" wx:if="{{editingActivityId}}" bindtap="onResetEdit">
+        取消编辑
+      </button>
+    </view>
+  </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">活动列表</view>
+        <view class="section-link clickable-link" wx:if="{{activityList.length}}" bindtap="goActivityListPage">查看更多</view>
+        <view class="section-link" wx:else>{{loading ? '加载中...' : '0 条'}}</view>
+      </view>
+
+      <block wx:if="{{activityPreviewList.length}}">
+        <view class="activity-card" wx:for="{{activityPreviewList}}" wx:key="_id">
+          <view class="activity-title">{{item.title}}<text wx:if="{{item.isScheduled}}">（预约）</text></view>
+          <view class="activity-info">时间：{{item.timeText}}</view>
+          <view class="activity-info" wx:if="{{item.publishAt}}">发布时间：{{item.publishTimeText}}</view>
+        <view class="activity-info" wx:if="{{item.isScheduled}}">当前状态：预约中</view>
+        <view class="activity-info">地点：{{item.location || '待定'}}</view>
+        <view class="activity-info">主题：{{item.theme}}</view>
+        <view class="activity-info">活动类型：{{item.activityType === 'rewardClaim' ? '奖励领取活动' : '普通活动'}}</view>
+        <view class="activity-info" wx:if="{{item.activityType === 'rewardClaim' && item.rewardLabel}}">奖励标签：{{item.rewardLabel}}</view>
+        <view class="activity-info" wx:if="{{item.activityType !== 'rewardClaim'}}">激励阅读关联：{{item.isReadingIncentiveActivity ? '是' : '否'}}</view>
+        <view class="activity-info" wx:if="{{item.isCurrentReadingIncentive}}">当前激励阅读状态：生效中</view>
+        <view class="activity-info">已报名：{{item.registrationCount}} 人</view>
+
+        <view class="action-row">
+          <view class="action-btn light" data-id="{{item._id}}" bindtap="onEditActivity">编辑</view>
+          <view class="action-btn" data-id="{{item._id}}" bindtap="goActivityDetail">查看详情</view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-text" wx:else>
+      当前还没有活动，先创建第一场活动。
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-header">
+      <view class="section-title">当前期线下活动报名数据</view>
+      <view class="section-link">{{currentOfflineActivityList.length}} 条</view>
+    </view>
+
+    <block wx:if="{{currentOfflineActivityList.length}}">
+      <view class="activity-card" wx:for="{{currentOfflineActivityList}}" wx:key="_id">
+        <view class="activity-title">{{item.title}}</view>
+        <view class="activity-info">活动形式：线下</view>
+        <view class="activity-info">时间：{{item.timeText}}</view>
+        <view class="activity-info">地点：{{item.location || '待定'}}</view>
+        <view class="activity-info">已报名：{{item.registrationCount}} 人</view>
+      </view>
+    </block>
+
+    <view class="empty-text" wx:else>
+      当前没有处于进行中的线下活动。
+    </view>
+  </view>
+</view>
+
+<privacy-reminder
+  visible="{{privacyReminderVisible}}"
+  title="{{privacyReminderTitle}}"
+  contract-name="{{privacyContractName}}"
+  intro-text="{{privacyIntroText}}"
+  confirm-text="{{privacyConfirmText}}"
+  cancel-text="{{privacyCancelText}}"
+  bindagree="onPrivacyReminderAgree"
+  binddisagree="onPrivacyReminderDisagree"
+  bindviewcontract="onPrivacyReminderViewContract"
+/>

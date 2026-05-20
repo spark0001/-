@@ -1,0 +1,102 @@
+.privacy-reminder-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  background: rgba(17, 17, 17, 0.56);
+}
+
+.privacy-reminder-card {
+  width: 100%;
+  max-width: 640rpx;
+  padding: 48rpx 40rpx 36rpx;
+  border-radius: 32rpx;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.privacy-reminder-icon {
+  position: relative;
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 auto 28rpx;
+}
+
+.privacy-reminder-icon-back,
+.privacy-reminder-icon-front {
+  position: absolute;
+  width: 40rpx;
+  height: 48rpx;
+  border: 4rpx solid #7866ff;
+  border-radius: 14rpx;
+  background: rgba(120, 102, 255, 0.08);
+}
+
+.privacy-reminder-icon-back {
+  left: 8rpx;
+  top: 14rpx;
+}
+
+.privacy-reminder-icon-front {
+  right: 8rpx;
+  top: 6rpx;
+  background: rgba(120, 102, 255, 0.16);
+}
+
+.privacy-reminder-title {
+  text-align: center;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #141414;
+}
+
+.privacy-reminder-intro {
+  margin-top: 28rpx;
+  font-size: 30rpx;
+  line-height: 1.9;
+  color: #575757;
+}
+
+.privacy-reminder-contract-row {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.9;
+  color: #575757;
+}
+
+.privacy-reminder-contract-link {
+  color: #6b5cff;
+}
+
+.privacy-reminder-action-row {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 36rpx;
+}
+
+.privacy-reminder-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  border: none;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.privacy-reminder-btn::after {
+  border: none;
+}
+
+.privacy-reminder-btn-light {
+  color: #8f88c9;
+  background: #f3f0ff;
+}
+
+.privacy-reminder-btn-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #8678ff 0%, #6a5cff 100%);
+}

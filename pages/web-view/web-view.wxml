@@ -1,0 +1,8 @@
+<block wx:if="{{url}}">
+  <web-view src="{{url}}"></web-view>
+</block>
+
+<view class="page" wx:else>
+  <view class="empty-text">{{errorMessage || '当前没有可打开的推荐链接'}}</view>
+  <button class="copy-btn" wx:if="{{fallbackUrl}}" bindtap="onCopyTap">复制链接</button>
+</view>

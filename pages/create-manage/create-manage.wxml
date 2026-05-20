@@ -1,0 +1,43 @@
+<view class="page">
+  <view class="header-card">
+    <view class="hero-kicker">CREATIVE CONTROL PANEL</view>
+    <view class="hero-top">
+      <view class="page-title">创作互动管理</view>
+      <view class="header-status {{syncing ? 'is-loading' : 'is-ready'}}">{{syncing ? '同步中' : '已同步'}}</view>
+    </view>
+    <view class="page-desc">这里集中放置创作互动玩法的后台入口，当前已接入双盲作诗与诗词摊煎饼两条管理链路。</view>
+    <view class="hero-meta-row">
+      <view class="hero-meta-pill" wx:if="{{blindPoemManageVisible}}">双盲作诗</view>
+      <view class="hero-meta-pill" wx:if="{{poemPancakeManageVisible}}">诗词摊煎饼</view>
+      <view class="hero-meta-pill">后台表单配置</view>
+    </view>
+    <view class="sync-tip" wx:if="{{syncing}}">权限信息正在静默刷新，你可以先进入当前可见模块。</view>
+  </view>
+
+  <view class="section-card error-card" wx:if="{{errorMessage && !hasContent}}">
+    <view class="page-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+  </view>
+
+  <block wx:else>
+    <view class="section-card clickable-card" wx:if="{{blindPoemManageVisible}}" bindtap="goBlindPoemManage">
+      <view class="entry-card-row">
+        <view class="entry-card-main">
+          <view class="section-title">双盲作诗管理</view>
+          <view class="entry-card-desc">管理模式启停、题库、作品审核与精选作品。</view>
+        </view>
+        <view class="entry-card-arrow">></view>
+      </view>
+    </view>
+
+    <view class="section-card clickable-card" wx:if="{{poemPancakeManageVisible}}" bindtap="goPoemPancakeManage">
+      <view class="entry-card-row">
+        <view class="entry-card-main">
+          <view class="section-title">诗词摊煎饼管理</view>
+          <view class="entry-card-desc">管理主题、活动时间、状态切换与当前共创进度。</view>
+        </view>
+        <view class="entry-card-arrow">></view>
+      </view>
+    </view>
+  </block>
+</view>

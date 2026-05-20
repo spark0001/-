@@ -1,0 +1,14 @@
+node_modules/
+miniprogram_npm/
+
+project.private.config.json
+
+.env
+.env.*
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.DS_Store
+Thumbs.db

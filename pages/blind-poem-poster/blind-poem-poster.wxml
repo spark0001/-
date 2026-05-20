@@ -1,0 +1,84 @@
+<view class="page">
+  <view class="header-card" wx:if="{{loading && !posterImagePath}}">
+    <view class="hero-kicker">CREATIVE POSTER</view>
+    <view class="page-title">正在生成海报</view>
+    <view class="page-desc">请稍等，系统正在整理这一轮创作结果。</view>
+  </view>
+
+  <view class="section-card" wx:elif="{{errorMessage && !posterImagePath}}">
+    <view class="section-title">生成失败</view>
+    <view class="empty-text">{{errorMessage}}</view>
+    <button class="secondary-btn" bindtap="onRetryTap">重新生成</button>
+  </view>
+
+  <block wx:else>
+    <view class="header-card hero-card">
+      <view class="hero-kicker">CREATIVE POSTER</view>
+      <view class="page-title">{{detail.managedContentTypeText || detail.modeText || '双盲作诗海报'}}</view>
+      <view class="page-desc">{{detail.promptTitle || '创作结果海报'}} · {{detail.statusTagText || '结果已生成'}}</view>
+      <view class="hero-tag-row">
+        <view class="hero-tag" wx:if="{{detail.createdAtText}}">{{detail.createdAtText}}</view>
+        <view class="hero-tag">{{detail.managedContentTypeText || detail.modeShortLabel || '双盲作诗'}}</view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-title">海报预览</view>
+        <view class="section-tag">{{templateName || detail.statusTagText || '结果海报'}}</view>
+      </view>
+
+      <view class="template-picker-block" wx:if="{{detail.managedContentType && templateOptionList.length}}">
+        <view class="template-picker-head">
+          <view class="template-picker-title">选择模板</view>
+          <view class="template-picker-count">{{templateOptionList.length}} 个可选模板</view>
+        </view>
+        <scroll-view class="template-picker-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+          <view class="template-picker-row">
+            <view
+              class="template-picker-card {{selectedTemplateId === item.optionId ? 'is-active' : ''}}"
+              wx:for="{{templateOptionList}}"
+              wx:key="optionId"
+              data-option-id="{{item.optionId}}"
+              bindtap="onTemplateOptionTap"
+            >
+              <image class="template-picker-thumb" src="{{item.thumbUrl}}" mode="aspectFill" wx:if="{{item.thumbUrl}}"></image>
+              <view class="template-picker-thumb placeholder" wx:else>{{item.isBuiltin ? '默认模板' : '模板底图'}}</view>
+              <view class="template-picker-name">{{item.templateName}}</view>
+              <view class="template-picker-badge">{{item.badgeText}}</view>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="hint-text">{{templateSourceText || '轻点不同模板会自动重生成海报预览，默认优先使用最近启用的模板。'}}</view>
+      </view>
+
+      <view class="poster-stage">
+        <image
+          class="poster-image"
+          wx:if="{{posterImagePath}}"
+          src="{{posterImagePath}}"
+          mode="widthFix"
+          bindtap="onPreviewPosterTap"
+        ></image>
+        <view class="poster-placeholder" wx:else>
+          <view class="poster-placeholder-text">{{loading || generating ? '海报生成中...' : '暂未生成海报'}}</view>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="secondary-btn action-btn" bindtap="onPreviewPosterTap" disabled="{{!posterImagePath}}">预览图片</button>
+        <button class="primary-btn action-btn" bindtap="onSavePosterTap" disabled="{{saving || generating || !posterImagePath}}">
+          {{saving ? '保存中...' : '保存海报'}}
+        </button>
+      </view>
+
+      <view class="hint-text">海报会导出成高清图片，方便直接保存和分享。</view>
+    </view>
+  </block>
+
+  <canvas
+    canvas-id="blindPoemPosterCanvas"
+    class="poster-export-canvas"
+    style="width: {{canvasStyleWidthPx}}px; height: {{canvasStyleHeightPx}}px;"
+  ></canvas>
+</view>

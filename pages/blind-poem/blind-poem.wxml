@@ -1,0 +1,136 @@
+<view class="page">
+  <view class="hero-card" wx:if="{{loading && !hasContent}}">
+    <view class="hero-kicker">BLIND POEM LAB</view>
+    <view class="page-title">双盲作诗</view>
+    <view class="page-desc">正在准备模式入口、最近记录与精选作品...</view>
+  </view>
+
+  <block wx:else>
+    <view class="hero-card">
+      <view class="hero-glow hero-glow-one"></view>
+      <view class="hero-glow hero-glow-two"></view>
+      <view class="hero-orbit hero-orbit-one"></view>
+      <view class="hero-orbit hero-orbit-two"></view>
+      <view class="hero-kicker">BLIND POEM LAB</view>
+      <view class="hero-title-row">
+        <view class="page-title">双盲作诗</view>
+        <view class="hero-floating-tag">匿名共创</view>
+      </view>
+      <view class="page-desc">在题面与主题的轻限制下匿名共创，让陌生灵感在一句一句之间相遇。</view>
+
+      <view class="hero-stat-grid">
+        <view class="hero-stat-card hero-stat-card-primary">
+          <view class="hero-stat-value">{{totalParticipationCount}}</view>
+          <view class="hero-stat-label">累计参与</view>
+        </view>
+        <view class="hero-stat-card">
+          <view class="hero-stat-value">{{modeOptions.length}}</view>
+          <view class="hero-stat-label">开放模式</view>
+        </view>
+        <view class="hero-stat-card">
+          <view class="hero-stat-value">{{featuredList.length}}</view>
+          <view class="hero-stat-label">精选作品</view>
+        </view>
+      </view>
+
+      <view class="hero-badge-row" wx:if="{{modeOptions.length}}">
+        <view class="hero-badge" wx:for="{{modeOptions}}" wx:key="value">{{item.modeLabel}}</view>
+      </view>
+    </view>
+
+    <view class="section-card entrance-section">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">模式入口</view>
+        <view class="section-link" bindtap="goHistory">查看历史</view>
+      </view>
+
+      <view class="empty-text" wx:if="{{!modeOptions.length}}">当前没有启用中的模式，请稍后再来。</view>
+
+      <view
+        class="mode-card {{item.accentClass}}"
+        wx:for="{{modeOptions}}"
+        wx:key="value"
+        data-mode="{{item.value}}"
+        bindtap="onModeTap"
+      >
+        <view class="mode-card-topline"></view>
+        <view class="mode-head">
+          <view class="mode-badge">{{item.modeLabel}}</view>
+          <view class="mode-accent-dot"></view>
+        </view>
+        <view class="mode-title">{{item.title}}</view>
+        <view class="mode-desc">{{item.description}}</view>
+        <view class="mode-foot">
+          <view class="mode-hint">{{item.tagline}}</view>
+          <view class="mode-arrow-pill">
+            <view class="mode-arrow-pill-text">开始创作</view>
+            <view class="mode-arrow-symbol">></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-topline"></view>
+      <view class="section-header">
+        <view class="section-title">最近记录</view>
+        <view class="section-link" bindtap="goHistory">全部历史</view>
+      </view>
+
+      <view class="empty-text" wx:if="{{loading && !hasContent}}">正在加载你的双盲作诗记录...</view>
+      <view class="empty-text" wx:elif="{{errorMessage && !hasContent}}">{{errorMessage}}</view>
+
+      <block wx:elif="{{historyPreview.length}}">
+        <view
+          class="history-card"
+          wx:for="{{historyPreview}}"
+          wx:key="roundId"
+          data-id="{{item.roundId}}"
+          bindtap="goResult"
+        >
+          <view class="history-card-accent"></view>
+          <view class="history-top">
+            <view class="history-mode">{{item.modeText}}</view>
+            <view class="history-time">{{item.createdAtText}}</view>
+          </view>
+          <view class="history-prompt">{{item.promptText}}</view>
+          <view class="history-content">{{item.myContent}}</view>
+          <view class="history-status-row">
+            <view class="history-status">{{item.statusText}}</view>
+            <view class="history-link">查看结果 ></view>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty-text" wx:else>你还没有参与过双盲作诗，先挑一个模式开始写吧。</view>
+    </view>
+
+    <view class="section-card" wx:if="{{featuredList.length}}">
+      <view class="section-topline featured-topline"></view>
+      <view class="section-header">
+        <view class="section-title">精选作品</view>
+        <view class="section-link">后台精选</view>
+      </view>
+
+      <view
+        class="history-card featured-card"
+        wx:for="{{featuredList}}"
+        wx:key="answerId"
+        data-id="{{item.roundId}}"
+        bindtap="goResult"
+      >
+        <view class="history-top">
+          <view class="history-mode">{{item.modeText}}</view>
+          <view class="featured-tag">精选</view>
+        </view>
+        <view class="history-prompt">{{item.promptText}}</view>
+        <view class="history-content">{{item.content}}</view>
+        <view class="history-status-row">
+          <view class="history-time">{{item.createdAtText}}</view>
+          <view class="history-link">查看结果 ></view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

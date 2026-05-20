@@ -1,0 +1,87 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/home/home",
+    "pages/quick-add/quick-add",
+    "pages/admin/admin",
+    "pages/activity-list-manage/activity-list-manage",
+    "pages/activity-list/activity-list",
+    "pages/create/create",
+    "pages/mine/mine",
+    "pages/avatar-editor/avatar-editor",
+    "pages/profile/profile",
+    "pages/apply/apply",
+    "pages/guest-status/guest-status",
+    "pages/reading-log/reading-log",
+    "pages/create-manage/create-manage",
+    "pages/poster-manage/poster-manage",
+    "pages/activity-detail/activity-detail",
+    "pages/activity-poster/activity-poster",
+    "pages/blind-poem-compose/blind-poem-compose",
+    "pages/blind-poem-result/blind-poem-result",
+    "pages/blind-poem-poster/blind-poem-poster",
+    "pages/blind-poem-history/blind-poem-history",
+    "pages/blind-poem-manage/blind-poem-manage",
+    "pages/blind-poem-prompt-list/blind-poem-prompt-list",
+    "pages/blind-poem-answer-list/blind-poem-answer-list",
+    "pages/blind-poem-analytics/blind-poem-analytics",
+    "pages/poem-pancake/poem-pancake",
+    "pages/poem-pancake-detail/poem-pancake-detail",
+    "pages/poem-pancake-manage/poem-pancake-manage",
+    "pages/poem-pancake-poster/poem-pancake-poster",
+    "pages/data-center/data-center",
+    "pages/application-review/application-review",
+    "pages/visitor-application-list/visitor-application-list",
+    "pages/notice-manage/notice-manage",
+    "pages/permission-manage/permission-manage",
+    "pages/reward-manage/reward-manage",
+    "pages/book-recommendation-manage/book-recommendation-manage",
+    "pages/book-recommendation-list/book-recommendation-list",
+    "pages/web-view/web-view",
+    "pages/activity-reflection/activity-reflection",
+    "pages/blind-poem/blind-poem",
+    "pages/edit-record/edit-record",
+    "pages/my-records/my-records",
+    "pages/record-detail/record-detail",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "校园读书会",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f7f7"
+  },
+  "__usePrivacyCheck__": true,
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "usingComponents": {
+    "privacy-reminder": "/components/privacy-reminder/index"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#666666",
+    "selectedColor": "#222222",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/create/create",
+        "text": "创作互动"
+      },
+      {
+        "pagePath": "pages/quick-add/quick-add",
+        "text": "打卡"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的"
+      }
+    ]
+  }
+}

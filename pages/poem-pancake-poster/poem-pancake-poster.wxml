@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="hero-card" wx:if="{{loading && !source}}">
+    <view class="hero-kicker">POEM PANCAKE POSTER</view>
+    <view class="page-title">正在生成海报</view>
+    <view class="page-desc">正在整理当前快照、贡献度和分享信息，请稍等一下。</view>
+  </view>
+
+  <view class="hero-card" wx:elif="{{errorMessage && !posterImagePath}}">
+    <view class="hero-kicker">POEM PANCAKE POSTER</view>
+    <view class="page-title">海报加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+    <view class="action-button single-button" bindtap="onRetryTap">重新生成</view>
+  </view>
+
+  <block wx:else>
+    <view class="hero-card">
+      <view class="hero-kicker">POEM PANCAKE POSTER</view>
+      <view class="page-title">诗词摊煎饼分享海报</view>
+      <view class="page-desc">海报会自动截取当前摊煎饼快照，并把主题、时间和你的贡献度一起排进去。</view>
+    </view>
+
+    <view class="poster-card">
+      <image class="poster-image" wx:if="{{posterImagePath}}" src="{{posterImagePath}}" mode="widthFix" bindtap="onPreviewPosterTap" />
+      <view class="page-desc" wx:elif="{{generating}}">海报正在生成中...</view>
+    </view>
+
+    <view class="hero-card">
+      <view class="action-row">
+        <view class="action-button button-light" bindtap="onPreviewPosterTap">预览大图</view>
+        <view class="action-button" bindtap="onSavePosterTap">保存到相册</view>
+      </view>
+    </view>
+  </block>
+
+  <canvas
+    canvas-id="poemPancakePosterCanvas"
+    class="poster-canvas"
+    style="width: {{canvasStyleWidthPx}}px; height: {{canvasStyleHeightPx}}px;"
+  />
+</view>

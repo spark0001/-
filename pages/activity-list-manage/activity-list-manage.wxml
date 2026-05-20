@@ -1,0 +1,80 @@
+<view class="page">
+  <view class="section-card error-card" wx:if="{{errorMessage && !hasContent}}">
+    <view class="section-title plain-title">加载失败</view>
+    <view class="page-desc">{{errorMessage}}</view>
+    <button class="action-btn" bindtap="getActivityList">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view class="section-card hero-card">
+      <view class="hero-kicker">ACTIVITY PANEL</view>
+      <view class="section-header hero-header">
+        <view class="section-title plain-title">活动列表</view>
+        <view class="header-status {{loading ? 'is-loading' : 'is-ready'}}">{{loading ? '同步中' : '已同步'}}</view>
+      </view>
+      <view class="page-desc">这里展示完整活动列表，可按预约活动和线下活动快速筛选。页面优先回显本地缓存，再静默同步最新数据。</view>
+      <view class="stats-row">
+        <view class="stat-pill">全部 {{summaryStats.total}}</view>
+        <view class="stat-pill">预约 {{summaryStats.scheduled}}</view>
+        <view class="stat-pill">线下 {{summaryStats.offline}}</view>
+      </view>
+      <view class="sync-tip" wx:if="{{loading}}">后台数据正在刷新，你可以先浏览现有活动。</view>
+      <view class="sync-tip error" wx:elif="{{errorMessage}}">{{errorMessage}}</view>
+    </view>
+
+    <view class="section-card" wx:if="{{permission.activityPermission}}">
+      <view class="section-header">
+        <view class="section-title">筛选与列表</view>
+        <view class="section-link">{{displayList.length}} 条</view>
+      </view>
+
+      <view class="filter-row">
+        <view class="filter-chip {{activeFilter === 'all' ? 'active' : ''}}" data-value="all" bindtap="onFilterChange">全部活动</view>
+        <view class="filter-chip {{activeFilter === 'scheduled' ? 'active' : ''}}" data-value="scheduled" bindtap="onFilterChange">预约活动</view>
+        <view class="filter-chip {{activeFilter === 'offline' ? 'active' : ''}}" data-value="offline" bindtap="onFilterChange">线下活动</view>
+      </view>
+
+      <block wx:if="{{displayList.length}}">
+        <view class="activity-card compact" wx:for="{{displayList}}" wx:key="_id">
+          <view class="activity-card-accent"></view>
+          <image
+            class="activity-cover-thumb"
+            wx:if="{{item.coverUrl && !coverErrorMap[item._id]}}"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+            data-id="{{item._id}}"
+            binderror="onCoverError"
+          ></image>
+          <view class="activity-cover-thumb placeholder" wx:else>封面</view>
+
+          <view class="activity-top">
+            <view class="activity-title">{{item.title}}<text wx:if="{{item.isScheduled}}">（预约）</text></view>
+            <view class="activity-mode-tag {{item.activityMode === 'offline' ? 'offline' : 'online'}}">{{item.activityMode === 'offline' ? '线下' : '线上'}}</view>
+          </view>
+          <view class="activity-meta-row">
+            <view class="activity-mini-tag">{{item.activityType === 'rewardClaim' ? '奖励领取活动' : '普通活动'}}</view>
+            <view class="activity-mini-tag" wx:if="{{item.isScheduled}}">预约中</view>
+            <view class="activity-mini-tag" wx:if="{{item.rewardLabel}}">{{item.rewardLabel}}</view>
+          </view>
+          <view class="activity-info">时间：{{item.timeText}}</view>
+          <view class="activity-info" wx:if="{{item.publishAt}}">发布时间：{{item.publishTimeText}}</view>
+          <view class="activity-info">地点：{{item.location || '待定'}}</view>
+          <view class="activity-info">主题：{{item.theme}}</view>
+          <view class="activity-info">已报名：{{item.registrationCount}} 人</view>
+
+          <view class="action-row">
+            <view class="action-btn light" data-id="{{item._id}}" bindtap="goEditActivity">编辑</view>
+            <view class="action-btn" data-id="{{item._id}}" bindtap="goActivityDetail">查看详情</view>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty-text" wx:else>当前筛选条件下没有活动。</view>
+    </view>
+
+    <view class="section-card" wx:else>
+      <view class="section-title">权限状态</view>
+      <view class="empty-text">当前账号没有活动管理权限。</view>
+    </view>
+  </block>
+</view>
