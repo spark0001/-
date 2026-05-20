@@ -17,6 +17,7 @@ const {
   buildShareTimeline,
   showPageShareMenu
 } = require('../../utils/share')
+const quickAddService = require('./service')
 
 const QUICK_ADD_PAGE_CACHE_KEY = 'quickAddPageCacheV1'
 const QUICK_ADD_REFRESH_INTERVAL = 30 * 1000
@@ -534,10 +535,7 @@ Page({
   },
 
   loadRewardTabAccess() {
-    return wx.cloud.callFunction({
-      name: 'getMonthlyGiftProgress'
-    }).then((res) => {
-      const result = res.result || {}
+    return quickAddService.getMonthlyGiftProgress().then((result) => {
       this.rewardTabAccess = result.success ? {
         currentRewardActivityId: result.currentRewardActivityId || '',
         currentRewardActivityTitle: result.currentRewardActivityTitle || '',
@@ -557,14 +555,10 @@ Page({
   loadActivityOptions(options = {}) {
     const shouldPersistCache = options.persistCache !== false
 
-    return wx.cloud.callFunction({
-      name: 'getActivityList',
-      data: {
-        limit: 20,
-        includePast: true
-      }
-    }).then((res) => {
-      const result = res.result || {}
+    return quickAddService.getActivityList({
+      limit: 20,
+      includePast: true
+    }).then((result) => {
       const list = result.success ? (result.list || []) : []
       const currentTimestamp = Date.now()
       const normalActivityList = list.filter((item) => item && item.activityType !== 'rewardClaim')
@@ -1170,10 +1164,7 @@ Page({
     }
 
     return Promise.all(safeList.map((filePath) => {
-      return wx.cloud.uploadFile({
-        cloudPath: pathBuilder(filePath),
-        filePath
-      }).then((res) => res.fileID)
+      return quickAddService.uploadQuickAddFile(pathBuilder(filePath), filePath)
     }))
   },
 
@@ -1297,27 +1288,22 @@ Page({
     })
 
     this.uploadReadingImages(form.images || []).then((imageFileIds) => {
-      return wx.cloud.callFunction({
-        name: 'submitReadingLog',
-        data: {
-          bookTitle: form.bookTitle,
-          contentTitle,
-          author: form.author,
-          duration: form.duration,
-          pagesOrChapter: form.pagesOrChapter,
-          insight: form.insight,
-          excerpt: form.excerpt,
-          images: imageFileIds,
-          activityId: form.activityId,
-          activityTitle: form.activityTitle
-        }
-      }).then((res) => ({
+      return quickAddService.submitReadingLog({
+        bookTitle: form.bookTitle,
+        contentTitle,
+        author: form.author,
+        duration: form.duration,
+        pagesOrChapter: form.pagesOrChapter,
+        insight: form.insight,
+        excerpt: form.excerpt,
+        images: imageFileIds,
+        activityId: form.activityId,
+        activityTitle: form.activityTitle
+      }).then((result) => ({
         imageFileIds,
-        res
+        result
       }))
-    }).then(({ imageFileIds, res }) => {
-      const result = res.result || {}
-
+    }).then(({ imageFileIds, result }) => {
       wx.hideLoading()
 
       if (!result.success) {
@@ -1402,22 +1388,17 @@ Page({
     })
 
     this.uploadLifeImages(form.images || []).then((imageFileIds) => {
-      return wx.cloud.callFunction({
-        name: 'submitLifeShare',
-        data: {
-          title: form.title,
-          content: form.content,
-          images: imageFileIds,
-          activityId: form.activityId,
-          activityTitle: form.activityTitle
-        }
-      }).then((res) => ({
+      return quickAddService.submitLifeShare({
+        title: form.title,
+        content: form.content,
+        images: imageFileIds,
+        activityId: form.activityId,
+        activityTitle: form.activityTitle
+      }).then((result) => ({
         imageFileIds,
-        res
+        result
       }))
-    }).then(({ imageFileIds, res }) => {
-      const result = res.result || {}
-
+    }).then(({ imageFileIds, result }) => {
       wx.hideLoading()
 
       if (!result.success) {
@@ -1509,22 +1490,17 @@ Page({
     })
 
     this.uploadRewardImages(form.images || []).then((imageFileIds) => {
-      return wx.cloud.callFunction({
-        name: 'submitRewardShare',
-        data: {
-          title: form.title,
-          content: form.content,
-          images: imageFileIds,
-          activityId: form.activityId,
-          activityTitle: form.activityTitle
-        }
-      }).then((res) => ({
+      return quickAddService.submitRewardShare({
+        title: form.title,
+        content: form.content,
+        images: imageFileIds,
+        activityId: form.activityId,
+        activityTitle: form.activityTitle
+      }).then((result) => ({
         imageFileIds,
-        res
+        result
       }))
-    }).then(({ imageFileIds, res }) => {
-      const result = res.result || {}
-
+    }).then(({ imageFileIds, result }) => {
       wx.hideLoading()
 
       if (!result.success) {
