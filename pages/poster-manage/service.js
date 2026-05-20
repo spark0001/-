@@ -21,7 +21,26 @@ function savePosterTemplate(data, fallbackMessage = '模板保存失败') {
   }).then((res) => unwrapCloudResult(res, fallbackMessage))
 }
 
+function getFileExtension(filePath) {
+  const safePath = String(filePath || '')
+  const extensionMatch = safePath.match(/\.[^.]+$/)
+
+  return extensionMatch ? extensionMatch[0] : '.png'
+}
+
+function buildPosterAssetCloudPath(filePath, cloudFolder = 'poster-assets') {
+  return `${cloudFolder}/${Date.now()}-${Math.random().toString(36).slice(2)}${getFileExtension(filePath)}`
+}
+
+function uploadPosterAsset(filePath, cloudFolder) {
+  return wx.cloud.uploadFile({
+    cloudPath: buildPosterAssetCloudPath(filePath, cloudFolder),
+    filePath
+  }).then((res) => res.fileID || '')
+}
+
 module.exports = {
   getPosterManageData,
-  savePosterTemplate
+  savePosterTemplate,
+  uploadPosterAsset
 }

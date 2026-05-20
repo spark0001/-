@@ -2,6 +2,7 @@ const {
   buildPrivacyReminderData,
   privacyReminderMethods
 } = require('../../utils/privacy')
+const adminService = require('./service')
 
 const TIME_TYPE_OPTIONS = [
   {
@@ -510,12 +511,6 @@ function pxToRpx(value, pxPerRpx) {
   return Math.round((Number(value) || 0) / pxPerRpx)
 }
 
-function buildTemplateAssetCloudPath(filePath) {
-  const extension = getFileExtension(filePath)
-  const randomPart = `${Date.now()}-${Math.floor(Math.random() * 100000)}`
-  return `activity-template-assets/${randomPart}.${extension}`
-}
-
 function buildPreviewShapeItem(shape, pxPerRpx) {
   const x = Math.max(0, normalizeShapeValue(shape && shape.x, 20))
   const y = Math.max(0, normalizeShapeValue(shape && shape.y, 20))
@@ -920,17 +915,6 @@ function canSetReadingIncentiveActivity(form) {
 function getShapeTypeIndex(value) {
   const index = SHAPE_OPTIONS.findIndex((item) => item.value === value)
   return index === -1 ? 0 : index
-}
-
-function getFileExtension(filePath) {
-  const safePath = String(filePath || '')
-  const dotIndex = safePath.lastIndexOf('.')
-
-  if (dotIndex === -1) {
-    return 'png'
-  }
-
-  return safePath.slice(dotIndex + 1).toLowerCase()
 }
 
 function normalizeFormByTimeType(form, nextTimeType) {
@@ -1686,17 +1670,14 @@ Page({
           title: '上传中...'
         })
 
-        wx.cloud.uploadFile({
-          cloudPath: buildTemplateAssetCloudPath(tempFilePath),
-          filePath: tempFilePath
-        }).then((uploadRes) => {
+        adminService.uploadTemplateAsset(tempFilePath).then((fileId) => {
           const templateData = normalizeTemplateData(this.data.form.templateData)
 
           this.updateTemplateData({
             ...templateData,
             imageElement: {
               ...templateData.imageElement,
-              url: uploadRes.fileID
+              url: fileId
             }
           })
 
@@ -2028,16 +2009,11 @@ Page({
       loading: true
     })
 
-    wx.cloud.callFunction({
-      name: 'getActivityList',
-        data: {
-          limit: 100,
-          includePast: true,
-          withPermission: true
-        }
-      }).then((res) => {
-        const result = res.result || {}
-
+    adminService.getActivityList({
+      limit: 100,
+      includePast: true,
+      withPermission: true
+    }).then((result) => {
         if (result.success) {
           this.setData({
             activityList: result.list || [],
@@ -2254,41 +2230,37 @@ Page({
       title: duplicateAsNew ? '发布中...' : '保存中...'
     })
 
-    wx.cloud.callFunction({
-      name: 'createOrUpdateActivity',
-      data: {
-        activityId: duplicateAsNew ? '' : this.data.editingActivityId,
-        title: form.title,
-        timeType: form.timeType,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        hasExactTime: form.timeType === 'dateRange' ? form.hasExactTime : true,
-        hasPublishSchedule: form.hasPublishSchedule,
-        publishDate: form.publishDate,
-        publishTime: form.publishTime,
-        location: form.location,
-        description: form.description,
-        theme: form.theme,
-        officialAccountUrl: normalizeArticleUrl(form.officialAccountUrl),
-        activityMode: normalizeEditorActivityMode(form.activityMode),
-        activityType,
-        isReadingIncentiveActivity: !!form.isReadingIncentiveActivity,
-        rewardMonthKey: activityType === 'rewardClaim'
-          ? (form.rewardMonthKey || rewardMeta.monthKey)
-          : '',
-        rewardLabel: activityType === 'rewardClaim'
-          ? (form.rewardLabel || rewardMeta.rewardLabel)
-          : '',
-        coverUrl: form.coverUrl,
-        displayConfig: {
-          templateType,
-          templateData: form.templateData || {}
-        }
+    adminService.createOrUpdateActivity({
+      activityId: duplicateAsNew ? '' : this.data.editingActivityId,
+      title: form.title,
+      timeType: form.timeType,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      hasExactTime: form.timeType === 'dateRange' ? form.hasExactTime : true,
+      hasPublishSchedule: form.hasPublishSchedule,
+      publishDate: form.publishDate,
+      publishTime: form.publishTime,
+      location: form.location,
+      description: form.description,
+      theme: form.theme,
+      officialAccountUrl: normalizeArticleUrl(form.officialAccountUrl),
+      activityMode: normalizeEditorActivityMode(form.activityMode),
+      activityType,
+      isReadingIncentiveActivity: !!form.isReadingIncentiveActivity,
+      rewardMonthKey: activityType === 'rewardClaim'
+        ? (form.rewardMonthKey || rewardMeta.monthKey)
+        : '',
+      rewardLabel: activityType === 'rewardClaim'
+        ? (form.rewardLabel || rewardMeta.rewardLabel)
+        : '',
+      coverUrl: form.coverUrl,
+      displayConfig: {
+        templateType,
+        templateData: form.templateData || {}
       }
-    }).then((res) => {
-      const result = res.result || {}
+    }).then((result) => {
       const nextActivityId = typeof result.activityId === 'string' ? result.activityId : ''
 
       wx.hideLoading()

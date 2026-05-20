@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "sync:cloud-shared": "node scripts/sync-cloudfunction-shared.js",
-    "verify:engineering": "node scripts/verify-engineering-consistency.js"
+    "verify:core-flows": "node scripts/verify-core-flows.js",
+    "verify:engineering": "node scripts/verify-engineering-consistency.js && node scripts/verify-core-flows.js"
   }
 }

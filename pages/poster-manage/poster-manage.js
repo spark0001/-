@@ -24,7 +24,8 @@ const {
 } = require('../../utils/posterTemplateSchema')
 const {
   getPosterManageData,
-  savePosterTemplate
+  savePosterTemplate,
+  uploadPosterAsset
 } = require('./service')
 
 const POSTER_MANAGE_CACHE_KEY = 'posterManageCacheV1'
@@ -1104,9 +1105,6 @@ Page({
           return
         }
 
-        const extensionMatch = tempFilePath.match(/\.[^.]+$/)
-        const extension = extensionMatch ? extensionMatch[0] : '.png'
-
         this.setData({
           [uploadStateKey]: true
         })
@@ -1115,12 +1113,9 @@ Page({
           title: loadingTitle || '上传中...'
         })
 
-        wx.cloud.uploadFile({
-          cloudPath: `${cloudFolder || 'poster-assets'}/${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`,
-          filePath: tempFilePath
-        }).then((uploadRes) => {
+        uploadPosterAsset(tempFilePath, cloudFolder || 'poster-assets').then((fileId) => {
           wx.hideLoading()
-          onSuccess(uploadRes.fileID || '')
+          onSuccess(fileId)
         }).catch((error) => {
           wx.hideLoading()
           console.error(`${uploadStateKey} upload error:`, error)
@@ -1885,9 +1880,6 @@ Page({
         }
 
         const currentForm = normalizeTemplateForm(this.data.form)
-        const extensionMatch = tempFilePath.match(/\.[^.]+$/)
-        const extension = extensionMatch ? extensionMatch[0] : '.png'
-
         this.setData({
           uploadingBackground: true
         })
@@ -1901,11 +1893,8 @@ Page({
             console.warn('read poster background image info failed:', error)
             return null
           }),
-          wx.cloud.uploadFile({
-            cloudPath: `poster-templates/${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`,
-            filePath: tempFilePath
-          })
-        ]).then(([imageInfo, uploadRes]) => {
+          uploadPosterAsset(tempFilePath, 'poster-templates')
+        ]).then(([imageInfo, fileId]) => {
           wx.hideLoading()
 
           const nextCanvasWidth = imageInfo ? String(imageInfo.width) : currentForm.canvasWidth
@@ -1924,8 +1913,8 @@ Page({
 
           this.setFormState({
             ...currentForm,
-            backgroundImageUrl: uploadRes.fileID || '',
-            backgroundImageFileId: uploadRes.fileID || '',
+            backgroundImageUrl: fileId || '',
+            backgroundImageFileId: fileId || '',
             canvasWidth: nextCanvasWidth,
             canvasHeight: nextCanvasHeight,
             fieldConfig: nextFieldConfig
